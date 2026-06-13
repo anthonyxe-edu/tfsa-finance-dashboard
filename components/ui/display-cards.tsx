@@ -11,6 +11,7 @@ export type DisplayCardProps = {
   className?: string;
 };
 
+/** A single flat notification card. Positioning/stacking is handled by the deck. */
 export function DisplayCard({
   icon,
   title = "Notification",
@@ -22,8 +23,7 @@ export function DisplayCard({
   return (
     <div
       className={cn(
-        "relative flex h-36 w-[20rem] -skew-y-[6deg] select-none flex-col justify-between rounded-xl border bg-surface px-4 py-3 shadow-[0_10px_30px_-12px_rgba(0,0,0,0.7)] transition-all duration-500",
-        "hover:border-border-strong",
+        "flex h-full w-full flex-col justify-between rounded-xl border bg-surface px-4 py-3 shadow-[0_12px_32px_-14px_rgba(0,0,0,0.75)]",
         urgent ? "border-loss/40" : "border-border",
         className,
       )}
@@ -57,30 +57,3 @@ export function DisplayCard({
     </div>
   );
 }
-
-/**
- * A fanned stack of cards. On hover the stack spreads apart (desktop
- * enhancement); on touch the cards stay stacked and the whole section links out.
- */
-export function DisplayCards({ cards }: { cards: DisplayCardProps[] }) {
-  // The first (most important / urgent) card sits on top via z-index and is
-  // fully legible at rest; the rest peek out behind it and fan apart on hover.
-  const positions = [
-    "[grid-area:stack] z-30 translate-x-3 translate-y-2 hover:translate-y-0",
-    "[grid-area:stack] z-20 -translate-x-4 translate-y-7 hover:translate-y-12",
-    "[grid-area:stack] z-10 -translate-x-11 translate-y-12 hover:translate-y-20",
-  ];
-  return (
-    <div className="grid [grid-template-areas:'stack'] place-items-center opacity-90 transition-opacity hover:opacity-100">
-      {cards.slice(0, 3).map((card, i) => (
-        <DisplayCard
-          key={i}
-          {...card}
-          className={cn(positions[i], card.className)}
-        />
-      ))}
-    </div>
-  );
-}
-
-export default DisplayCards;

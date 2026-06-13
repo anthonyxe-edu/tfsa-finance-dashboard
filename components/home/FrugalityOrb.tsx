@@ -18,15 +18,22 @@ const C = 2 * Math.PI * R;
 /**
  * Budget-burn orb: the ring fills with how much of this month's income has been
  * spent. Lower burn = more "frugal" = more floating coins + a greener orb.
+ *
+ * All inner text/coins use container-query units (cqi) so the orb scales cleanly
+ * to any `maxWidth` (e.g. compact in the radial nav hub vs. full hero size).
  */
 export function FrugalityOrb({
   income,
   spend,
   sourceLabel,
+  maxWidth = "min(300px, 78vw)",
+  compact = false,
 }: {
   income: number;
   spend: number;
   sourceLabel?: string;
+  maxWidth?: string;
+  compact?: boolean;
 }) {
   const hasIncome = income > 0;
   const burn = hasIncome ? spend / income : 0;
@@ -41,7 +48,7 @@ export function FrugalityOrb({
         ? TONES.watch
         : TONES.good;
 
-  // Coin count scales with frugality (0–7). Positions are deterministic so they
+  // Coin count scales with frugality (0–8). Positions are deterministic so they
   // don't reshuffle on every render.
   const coinCount = hasIncome ? Math.round(frugality * 8) : 0;
   const coins = useMemo(
@@ -54,7 +61,7 @@ export function FrugalityOrb({
           left: flank + ((i * 7) % 16),
           delay: (i * 0.5) % 3,
           duration: 2.8 + (i % 3) * 0.5,
-          size: i % 3 === 0 ? 18 : 14,
+          size: i % 3 === 0 ? "6cqi" : "4.7cqi",
         };
       }),
     [coinCount],
@@ -65,7 +72,11 @@ export function FrugalityOrb({
   return (
     <div
       className="relative"
-      style={{ width: "min(300px, 78vw)", aspectRatio: "1 / 1" }}
+      style={{
+        width: maxWidth,
+        aspectRatio: "1 / 1",
+        containerType: "inline-size",
+      }}
       role="img"
       aria-label={
         hasIncome
@@ -130,11 +141,12 @@ export function FrugalityOrb({
         {coins.map((c, i) => (
           <Coins
             key={i}
-            size={c.size}
             className="absolute text-[#fbbf24]"
             style={{
               left: `${c.left}%`,
               bottom: "26%",
+              width: c.size,
+              height: c.size,
               filter: "drop-shadow(0 0 6px rgba(251,191,36,0.55))",
               animation: `coin-float ${c.duration}s ease-in-out ${c.delay}s infinite`,
             }}
@@ -142,33 +154,39 @@ export function FrugalityOrb({
         ))}
       </div>
 
-      {/* Center readout */}
-      <div className="absolute inset-0 flex flex-col items-center justify-center text-center">
+      {/* Center readout (cqi-scaled) */}
+      <div className="absolute inset-0 flex flex-col items-center justify-center text-center leading-none">
         {hasIncome ? (
           <>
-            <span className={`text-5xl font-bold tnum ${tone.text}`}>
+            <span className={`font-bold tnum text-[18cqi] ${tone.text}`}>
               {Math.round(burn * 100)}
-              <span className="text-2xl align-top">%</span>
+              <span className="align-top text-[8cqi]">%</span>
             </span>
-            <span className="mt-1 text-xs tracking-wider text-muted uppercase">
+            <span className="mt-[2cqi] text-[4cqi] tracking-wider text-muted uppercase">
               of income spent
             </span>
-            <span className="mt-2 text-sm text-fg tnum">
-              {fmtCurrency0(spend)}{" "}
-              <span className="text-faint">/ {fmtCurrency0(income)}</span>
-            </span>
-            {sourceLabel && (
-              <span className="mt-0.5 text-[10px] tracking-wide text-faint uppercase">
+            {!compact && (
+              <span className="mt-[3cqi] text-[4.8cqi] text-fg tnum">
+                {fmtCurrency0(spend)}{" "}
+                <span className="text-faint">/ {fmtCurrency0(income)}</span>
+              </span>
+            )}
+            {!compact && sourceLabel && (
+              <span className="mt-[1cqi] text-[3.2cqi] tracking-wide text-faint uppercase">
                 {sourceLabel}
               </span>
             )}
           </>
         ) : (
           <>
-            <span className="text-lg font-semibold text-fg">Set your income</span>
-            <span className="mt-1 max-w-[10rem] text-xs text-muted">
-              Add a monthly income below to power the orb.
+            <span className="text-[6.5cqi] font-semibold text-fg">
+              Set your income
             </span>
+            {!compact && (
+              <span className="mt-[2cqi] max-w-[60cqi] text-[4cqi] text-muted">
+                Add a monthly income below to power the orb.
+              </span>
+            )}
           </>
         )}
       </div>

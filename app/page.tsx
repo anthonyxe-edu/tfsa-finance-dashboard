@@ -10,7 +10,7 @@ import {
 } from "@/hooks/useDb";
 import { useQuotes } from "@/hooks/useQuotes";
 import { useIncome } from "@/hooks/useIncome";
-import { FrugalityOrb } from "@/components/home/FrugalityOrb";
+import { RadialOrbitalNav } from "@/components/home/RadialOrbitalNav";
 import { NotificationCards } from "@/components/home/NotificationCards";
 import { StatTile } from "@/components/ui/StatTile";
 import { CashBalanceTile } from "@/components/overview/CashBalanceTile";
@@ -55,19 +55,15 @@ export default function HomePage() {
 
   return (
     <div className="space-y-8">
-      {/* Hero: frugality orb */}
-      <section className="flex flex-col items-center pt-1 text-center">
-        <p className="text-xs font-medium tracking-wider text-muted uppercase">
-          {fmtMonthLabel(month)} · budget used
-        </p>
-        <div className="mt-3">
-          <FrugalityOrb
-            income={income.income}
-            spend={spend}
-            sourceLabel={sourceLabel}
-          />
-        </div>
-      </section>
+      {/* Hero: orbital nav around the frugality orb */}
+      <div className="pt-1">
+        <RadialOrbitalNav
+          income={income.income}
+          spend={spend}
+          sourceLabel={sourceLabel}
+          caption={`${fmtMonthLabel(month)} · budget used`}
+        />
+      </div>
 
       {/* Key stats */}
       <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">

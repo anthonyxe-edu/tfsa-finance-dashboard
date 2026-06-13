@@ -1,8 +1,10 @@
 "use client";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { ArrowRight, Zap, TrendingUp, Wallet, Target, BellOff } from "lucide-react";
 import { useNotifications } from "@/hooks/useDb";
-import { DisplayCards, type DisplayCardProps } from "@/components/ui/display-cards";
+import { DisplayCard } from "@/components/ui/display-cards";
+import { SwipeableCardDeck } from "@/components/ui/swipeable-card-deck";
 import type { AppNotification } from "@/lib/types";
 
 function relTime(ts: number): string {
@@ -30,7 +32,9 @@ function titleFor(n: AppNotification): string {
 }
 
 export function NotificationCards() {
+  const router = useRouter();
   const notes = useNotifications();
+
   // Urgent first, then most recent.
   const sorted = [...notes].sort((a, b) => {
     const au = a.severity === "urgent" ? 1 : 0;
@@ -39,13 +43,16 @@ export function NotificationCards() {
     return b.ts - a.ts;
   });
 
-  const cards: DisplayCardProps[] = sorted.slice(0, 3).map((n) => ({
-    icon: iconFor(n),
-    title: titleFor(n),
-    description: n.message,
-    date: relTime(n.ts),
-    urgent: n.severity === "urgent",
-  }));
+  const cards = sorted.slice(0, 6).map((n) => (
+    <DisplayCard
+      key={n.id}
+      icon={iconFor(n)}
+      title={titleFor(n)}
+      description={n.message}
+      date={relTime(n.ts)}
+      urgent={n.severity === "urgent"}
+    />
+  ));
 
   return (
     <section>
@@ -53,7 +60,9 @@ export function NotificationCards() {
         <div>
           <h2 className="text-sm font-semibold text-fg">Notifications</h2>
           <p className="text-xs text-muted">
-            Outstanding alerts{notes.length > 3 ? ` · ${notes.length} total` : ""}
+            {notes.length
+              ? `Swipe to see more${notes.length > 6 ? ` · ${notes.length} total` : ""}`
+              : "Outstanding alerts"}
           </p>
         </div>
         <Link
@@ -65,15 +74,7 @@ export function NotificationCards() {
       </div>
 
       {cards.length ? (
-        <Link
-          href="/notifications"
-          aria-label="View all notifications"
-          className="block rounded-card outline-none focus-visible:ring-2 focus-visible:ring-ring"
-        >
-          <div className="flex min-h-[15rem] items-center justify-center py-6">
-            <DisplayCards cards={cards} />
-          </div>
-        </Link>
+        <SwipeableCardDeck items={cards} onTap={() => router.push("/notifications")} />
       ) : (
         <div className="flex flex-col items-center gap-2 rounded-card border border-dashed border-border bg-surface/50 py-10 text-center">
           <BellOff size={22} className="text-faint" />
