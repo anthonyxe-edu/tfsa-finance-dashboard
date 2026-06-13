@@ -1,65 +1,188 @@
-import Image from "next/image";
+"use client";
+import Link from "next/link";
+import {
+  Wallet,
+  PiggyBank,
+  TrendingUp,
+  Target,
+  ArrowRight,
+  TrendingDown,
+} from "lucide-react";
+import { usePlaid } from "@/components/providers/PlaidProvider";
+import { useHoldings, useGoals, useNotifications } from "@/hooks/useDb";
+import { useQuotes } from "@/hooks/useQuotes";
+import { Card } from "@/components/ui/Card";
+import { StatTile } from "@/components/ui/StatTile";
+import { Money } from "@/components/ui/Money";
+import { Badge } from "@/components/ui/Badge";
+import { ProgressBar } from "@/components/ui/ProgressBar";
+import { AdviceList } from "@/components/lifecontext/AdviceList";
+import { fmtPct, fmtCurrency0 } from "@/lib/format";
 
-export default function Home() {
+export default function OverviewPage() {
+  const { accounts, linked } = usePlaid();
+  const holdings = useHoldings();
+  const { quotes } = useQuotes(holdings.map((h) => h.ticker));
+  const goals = useGoals();
+  const notes = useNotifications();
+
+  const checking =
+    accounts.find((a) => a.subtype === "checking") ??
+    accounts.find((a) => a.type === "depository") ??
+    accounts[0];
+  const checkingBal = checking?.current ?? checking?.available ?? 0;
+
+  let tfsaValue = 0;
+  let prevValue = 0;
+  for (const h of holdings) {
+    const q = quotes[h.ticker];
+    const price = q?.price ?? 0;
+    tfsaValue += h.units * price;
+    prevValue += h.units * (q?.prevClose ?? price);
+  }
+  const dayChange = tfsaValue - prevValue;
+  const dayPct = prevValue ? (dayChange / prevValue) * 100 : 0;
+
+  const topGoal = [...goals]
+    .filter((g) => g.target > 0)
+    .sort((a, b) => b.saved / b.target - a.saved / a.target)[0];
+  const goalPct = topGoal
+    ? Math.min(100, (topGoal.saved / topGoal.target) * 100)
+    : 0;
+
   return (
-    <div className="flex flex-col flex-1 items-center justify-center bg-zinc-50 font-sans dark:bg-black">
-      <main className="flex flex-1 w-full max-w-3xl flex-col items-center justify-between py-32 px-16 bg-white dark:bg-black sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={100}
-          height={20}
-          priority
+    <div className="space-y-5">
+      <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+        <StatTile
+          label="Checking balance"
+          value={
+            linked ? (
+              <Money value={checkingBal} />
+            ) : (
+              <span className="text-faint">—</span>
+            )
+          }
+          icon={<Wallet size={18} />}
+          sub={
+            linked ? (
+              <span className="truncate text-muted">
+                {checking?.name ?? "—"}
+              </span>
+            ) : (
+              <span className="text-faint">link an account</span>
+            )
+          }
         />
-        <div className="flex flex-col items-center gap-6 text-center sm:items-start sm:text-left">
-          <h1 className="max-w-xs text-3xl font-semibold leading-10 tracking-tight text-black dark:text-zinc-50">
-            To get started, edit the page.tsx file.
-          </h1>
-          <p className="max-w-md text-lg leading-8 text-zinc-600 dark:text-zinc-400">
-            Looking for a starting point or more instructions? Head over to{" "}
-            <a
-              href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
+        <StatTile
+          label="TFSA value"
+          value={<Money value={tfsaValue} />}
+          icon={<PiggyBank size={18} />}
+          sub={
+            <span className="text-muted">
+              {holdings.length} holding{holdings.length === 1 ? "" : "s"}
+            </span>
+          }
+        />
+        <StatTile
+          label="TFSA today"
+          value={<Money value={dayChange} colorBySign showSign />}
+          icon={
+            dayChange >= 0 ? (
+              <TrendingUp size={18} />
+            ) : (
+              <TrendingDown size={18} />
+            )
+          }
+          sub={
+            holdings.length ? (
+              <Badge variant={dayPct >= 0 ? "gain" : "loss"}>
+                {fmtPct(dayPct)}
+              </Badge>
+            ) : (
+              <span className="text-faint">add holdings</span>
+            )
+          }
+        />
+        <StatTile
+          label="Top goal"
+          value={
+            topGoal ? (
+              <span className="tnum">{goalPct.toFixed(0)}%</span>
+            ) : (
+              <span className="text-faint">—</span>
+            )
+          }
+          icon={<Target size={18} />}
+          sub={
+            topGoal ? (
+              <span className="truncate text-muted">{topGoal.name}</span>
+            ) : (
+              <span className="text-faint">set a goal</span>
+            )
+          }
+        />
+      </div>
+
+      <div className="grid items-start gap-5 lg:grid-cols-3">
+        <Card
+          title="What to watch this month"
+          subtitle="Living-below-means insights"
+          className="lg:col-span-2"
+          action={
+            <Link
+              href="/life-context"
+              className="inline-flex items-center gap-1 text-xs text-primary hover:underline"
             >
-              Templates
-            </a>{" "}
-            or the{" "}
-            <a
-              href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
+              Details <ArrowRight size={13} />
+            </Link>
+          }
+        >
+          <AdviceList limit={4} />
+        </Card>
+
+        <Card
+          title="Recent alerts"
+          action={
+            <Link
+              href="/notifications"
+              className="inline-flex items-center gap-1 text-xs text-primary hover:underline"
             >
-              Learning
-            </a>{" "}
-            center.
-          </p>
-        </div>
-        <div className="flex flex-col gap-4 text-base font-medium sm:flex-row">
-          <a
-            className="flex h-12 w-full items-center justify-center gap-2 rounded-full bg-foreground px-5 text-background transition-colors hover:bg-[#383838] dark:hover:bg-[#ccc] md:w-[158px]"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={16}
-              height={16}
-            />
-            Deploy Now
-          </a>
-          <a
-            className="flex h-12 w-full items-center justify-center rounded-full border border-solid border-black/[.08] px-5 transition-colors hover:border-transparent hover:bg-black/[.04] dark:border-white/[.145] dark:hover:bg-[#1a1a1a] md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Documentation
-          </a>
-        </div>
-      </main>
+              All <ArrowRight size={13} />
+            </Link>
+          }
+        >
+          {notes.length ? (
+            <ul className="space-y-2.5">
+              {notes.slice(0, 5).map((n) => (
+                <li key={n.id} className="text-sm">
+                  <span className={n.read ? "text-muted" : "text-fg"}>
+                    {n.message}
+                  </span>
+                </li>
+              ))}
+            </ul>
+          ) : (
+            <p className="text-sm text-muted">No alerts yet.</p>
+          )}
+        </Card>
+      </div>
+
+      {topGoal && (
+        <Card title="Top goal progress">
+          <div className="flex items-center justify-between text-sm">
+            <span className="font-medium text-fg">{topGoal.name}</span>
+            <span className="text-muted tnum">
+              {fmtCurrency0(topGoal.saved)} of {fmtCurrency0(topGoal.target)}
+            </span>
+          </div>
+          <ProgressBar
+            value={topGoal.saved}
+            max={topGoal.target || 1}
+            tone={goalPct >= 100 ? "gain" : "primary"}
+            className="mt-2"
+          />
+        </Card>
+      )}
     </div>
   );
 }
