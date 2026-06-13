@@ -18,15 +18,15 @@
   --color-muted: #93a4c0;
   --color-faint: #64748b;
 
-  /* Brand / semantic */
-  --color-primary: #3b82f6;
-  --color-primary-strong: #2563eb;
-  --color-on-primary: #ffffff;
+  /* Brand / semantic — vibrant neon-lime accent, minimalist otherwise */
+  --color-primary: #9dff3c;
+  --color-primary-strong: #b4ff66;
+  --color-on-primary: #0b1120;
   --color-gain: #10b981;
   --color-loss: #f43f5e;
   --color-warning: #f59e0b;
   --color-info: #38bdf8;
-  --color-ring: #3b82f6;
+  --color-ring: #9dff3c;
 
   /* Fonts (wired to next/font in layout.tsx) */
   --font-sans: var(--font-fira-sans), ui-sans-serif, system-ui, sans-serif;

@@ -1,26 +1,23 @@
 "use client";
-import { Coins } from "lucide-react";
-import { useMemo } from "react";
 import { fmtCurrency0 } from "@/lib/format";
+import { ParticleGlobe } from "./ParticleGlobe";
 
-type Tone = { stroke: string; glow: string; text: string };
-
-const TONES: Record<"good" | "watch" | "over", Tone> = {
-  good: { stroke: "var(--color-gain)", glow: "var(--color-gain)", text: "text-gain" },
-  watch: { stroke: "var(--color-warning)", glow: "var(--color-warning)", text: "text-warning" },
-  over: { stroke: "var(--color-loss)", glow: "var(--color-loss)", text: "text-loss" },
-};
+// Tone hexes mirror the design tokens; passed to the canvas globe + used for the ring.
+const TONES = {
+  good: "#9dff3c", // neon lime (brand) — frugal / under budget
+  watch: "#f59e0b", // amber — near the line
+  over: "#f43f5e", // red — over budget
+} as const;
 
 const SIZE = 300;
 const R = 120;
 const C = 2 * Math.PI * R;
 
 /**
- * Budget-burn orb: the ring fills with how much of this month's income has been
- * spent. Lower burn = more "frugal" = more floating coins + a greener orb.
- *
- * All inner text/coins use container-query units (cqi) so the orb scales cleanly
- * to any `maxWidth` (e.g. compact in the radial nav hub vs. full hero size).
+ * Budget-burn orb. A rotating neon point-cloud globe sits behind a thin ring
+ * that fills with how much of this month's income has been spent. Frugality
+ * (1 − burn) brightens the globe + outer glow; tone shifts lime → amber → red.
+ * Size-agnostic via container-query (cqi) units (`maxWidth` + `compact` props).
  */
 export function FrugalityOrb({
   income,
@@ -37,35 +34,17 @@ export function FrugalityOrb({
 }) {
   const hasIncome = income > 0;
   const burn = hasIncome ? spend / income : 0;
-  const fill = Math.min(burn, 1); // ring never visually exceeds full
-  const frugality = Math.max(0, Math.min(1, 1 - burn)); // 1 = saved it all
+  const fill = Math.min(burn, 1);
+  const frugality = Math.max(0, Math.min(1, 1 - burn));
 
-  const tone = !hasIncome
-    ? TONES.watch
+  const toneKey = !hasIncome
+    ? "good"
     : burn >= 1
-      ? TONES.over
+      ? "over"
       : burn >= 0.85
-        ? TONES.watch
-        : TONES.good;
-
-  // Coin count scales with frugality (0–8). Positions are deterministic so they
-  // don't reshuffle on every render.
-  const coinCount = hasIncome ? Math.round(frugality * 8) : 0;
-  const coins = useMemo(
-    () =>
-      Array.from({ length: coinCount }, (_, i) => {
-        // Rise along the left/right flanks so the center readout stays clear.
-        const onLeft = i % 2 === 0;
-        const flank = onLeft ? 12 : 72;
-        return {
-          left: flank + ((i * 7) % 16),
-          delay: (i * 0.5) % 3,
-          duration: 2.8 + (i % 3) * 0.5,
-          size: i % 3 === 0 ? "6cqi" : "4.7cqi",
-        };
-      }),
-    [coinCount],
-  );
+        ? "watch"
+        : "good";
+  const hex = TONES[toneKey];
 
   const dashoffset = C * (1 - fill);
 
@@ -84,81 +63,63 @@ export function FrugalityOrb({
           : "Monthly income not set"
       }
     >
-      {/* Spinning gradient glow */}
+      {/* Outer neon glow — brighter the more frugal */}
       <div
-        className="absolute inset-3 rounded-full blur-2xl"
+        className="absolute inset-[12%] rounded-full blur-2xl"
         style={{
-          background: `conic-gradient(from 0deg, ${tone.glow}, transparent 35%, ${tone.glow} 70%, transparent)`,
-          opacity: 0.28 + frugality * 0.22,
-          animation: "orb-spin 9s linear infinite",
+          background: `radial-gradient(circle, ${hex} 0%, transparent 70%)`,
+          opacity: 0.12 + frugality * 0.33,
+          animation: "orb-breathe 6s ease-in-out infinite",
         }}
       />
 
-      {/* Progress ring + inner orb */}
-      <svg
-        viewBox={`0 0 ${SIZE} ${SIZE}`}
-        className="relative h-full w-full"
-        style={{ animation: "orb-breathe 6s ease-in-out infinite" }}
-      >
-        <defs>
-          <radialGradient id="orbFill" cx="50%" cy="42%" r="65%">
-            <stop offset="0%" stopColor="var(--color-surface-2)" />
-            <stop offset="100%" stopColor="var(--color-canvas)" />
-          </radialGradient>
-        </defs>
-        {/* inner sphere */}
-        <circle cx={SIZE / 2} cy={SIZE / 2} r={R - 14} fill="url(#orbFill)" />
-        {/* track */}
+      {/* Rotating particle globe */}
+      <ParticleGlobe color={hex} intensity={frugality} sphereScale={0.62} />
+
+      {/* Soft dark vignette so the center readout stays legible over the dots */}
+      <div className="pointer-events-none absolute inset-0 grid place-items-center">
+        <div
+          className="h-[58%] w-[58%] rounded-full"
+          style={{
+            background:
+              "radial-gradient(circle, rgba(11,17,32,0.92) 36%, rgba(11,17,32,0.6) 60%, transparent 78%)",
+          }}
+        />
+      </div>
+
+      {/* Budget-burn ring */}
+      <svg viewBox={`0 0 ${SIZE} ${SIZE}`} className="relative h-full w-full">
         <circle
           cx={SIZE / 2}
           cy={SIZE / 2}
           r={R}
           fill="none"
           stroke="var(--color-border)"
-          strokeWidth={14}
+          strokeWidth={8}
         />
-        {/* progress arc */}
         <circle
           cx={SIZE / 2}
           cy={SIZE / 2}
           r={R}
           fill="none"
-          stroke={tone.stroke}
-          strokeWidth={14}
+          stroke={hex}
+          strokeWidth={8}
           strokeLinecap="round"
           strokeDasharray={C}
           strokeDashoffset={dashoffset}
           transform={`rotate(-90 ${SIZE / 2} ${SIZE / 2})`}
           style={{
             transition: "stroke-dashoffset 700ms ease, stroke 400ms ease",
-            filter: `drop-shadow(0 0 8px ${tone.glow})`,
+            filter: `drop-shadow(0 0 6px ${hex})`,
           }}
         />
       </svg>
-
-      {/* Floating coins (money animation) — in front of the sphere, on the flanks */}
-      <div className="pointer-events-none absolute inset-0 overflow-hidden">
-        {coins.map((c, i) => (
-          <Coins
-            key={i}
-            className="absolute text-[#fbbf24]"
-            style={{
-              left: `${c.left}%`,
-              bottom: "26%",
-              width: c.size,
-              height: c.size,
-              filter: "drop-shadow(0 0 6px rgba(251,191,36,0.55))",
-              animation: `coin-float ${c.duration}s ease-in-out ${c.delay}s infinite`,
-            }}
-          />
-        ))}
-      </div>
 
       {/* Center readout (cqi-scaled) */}
       <div className="absolute inset-0 flex flex-col items-center justify-center text-center leading-none">
         {hasIncome ? (
           <>
-            <span className={`font-bold tnum text-[18cqi] ${tone.text}`}>
+            <span className="font-bold tnum text-[18cqi]" style={{ color: hex }}>
               {Math.round(burn * 100)}
               <span className="align-top text-[8cqi]">%</span>
             </span>
