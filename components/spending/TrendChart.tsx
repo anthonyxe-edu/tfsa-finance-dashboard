@@ -41,21 +41,25 @@ export function TrendChart({ data }: { data: Point[] }) {
         <AreaChart data={data} margin={{ top: 8, right: 8, bottom: 0, left: -8 }}>
           <defs>
             <linearGradient id="trendFill" x1="0" y1="0" x2="0" y2="1">
-              <stop offset="0%" stopColor="#3b82f6" stopOpacity={0.35} />
-              <stop offset="100%" stopColor="#3b82f6" stopOpacity={0} />
+              <stop offset="0%" stopColor="var(--color-primary)" stopOpacity={0.3} />
+              <stop offset="100%" stopColor="var(--color-primary)" stopOpacity={0} />
             </linearGradient>
           </defs>
-          <CartesianGrid stroke="#20304f" strokeDasharray="3 3" vertical={false} />
+          <CartesianGrid
+            stroke="var(--color-border)"
+            strokeDasharray="3 3"
+            vertical={false}
+          />
           <XAxis
             dataKey="month"
             tickFormatter={(m) => fmtMonthLabel(m).split(" ")[0]}
-            tick={{ fill: "#93a4c0", fontSize: 11 }}
+            tick={{ fill: "var(--color-muted)", fontSize: 11 }}
             tickLine={false}
-            axisLine={{ stroke: "#20304f" }}
+            axisLine={{ stroke: "var(--color-border)" }}
           />
           <YAxis
             tickFormatter={(v) => `$${Math.round(v / 1000)}k`}
-            tick={{ fill: "#93a4c0", fontSize: 11 }}
+            tick={{ fill: "var(--color-muted)", fontSize: 11 }}
             tickLine={false}
             axisLine={false}
             width={44}
@@ -68,12 +72,12 @@ export function TrendChart({ data }: { data: Point[] }) {
                 label={label as string}
               />
             )}
-            cursor={{ stroke: "#2c4068" }}
+            cursor={{ stroke: "var(--color-border-strong)" }}
           />
           <Area
             type="monotone"
             dataKey="total"
-            stroke="#3b82f6"
+            stroke="var(--color-primary)"
             strokeWidth={2}
             fill="url(#trendFill)"
             isAnimationActive={false}

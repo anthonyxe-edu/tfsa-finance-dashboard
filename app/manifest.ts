@@ -7,8 +7,8 @@ export default function manifest(): MetadataRoute.Manifest {
     description: "Personal TFSA & spending dashboard",
     start_url: "/",
     display: "standalone",
-    background_color: "#0b1120",
-    theme_color: "#0b1120",
+    background_color: "#0c0d0a",
+    theme_color: "#0c0d0a",
     icons: [
       {
         src: "/icon.svg",

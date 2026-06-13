@@ -30,7 +30,7 @@ const NODES: NavNode[] = [
   { id: "alerts", label: "Alerts", href: "/notifications", icon: Bell, blurb: "ETF booms, overspend & goal milestones." },
 ];
 
-const RADIUS_PCT = 37;
+const RADIUS_PCT = 39;
 
 export function RadialOrbitalNav({
   income,
@@ -76,7 +76,7 @@ export function RadialOrbitalNav({
 
       <div
         className="relative"
-        style={{ width: "min(360px, 92vw)", aspectRatio: "1 / 1" }}
+        style={{ width: "min(384px, 94vw)", aspectRatio: "1 / 1" }}
         onPointerEnter={() => (pausedRef.current = true)}
         onPointerLeave={() => (pausedRef.current = false)}
         onTouchStart={() => (pausedRef.current = true)}
@@ -93,7 +93,7 @@ export function RadialOrbitalNav({
             income={income}
             spend={spend}
             sourceLabel={sourceLabel}
-            maxWidth="min(188px, 50%)"
+            maxWidth="min(216px, 57%)"
             compact
           />
         </div>

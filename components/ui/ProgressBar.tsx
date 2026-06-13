@@ -1,3 +1,5 @@
+"use client";
+import { useEffect, useState } from "react";
 import { cn } from "@/lib/cn";
 
 type Tone = "primary" | "gain" | "warning" | "loss" | "info";
@@ -22,6 +24,14 @@ export function ProgressBar({
   className?: string;
 }) {
   const pct = max > 0 ? Math.max(0, Math.min(100, (value / max) * 100)) : 0;
+
+  // Animate from 0 up to the target on mount for a smooth fill-in.
+  const [width, setWidth] = useState(0);
+  useEffect(() => {
+    const id = requestAnimationFrame(() => setWidth(pct));
+    return () => cancelAnimationFrame(id);
+  }, [pct]);
+
   return (
     <div
       className={cn(
@@ -35,10 +45,10 @@ export function ProgressBar({
     >
       <div
         className={cn(
-          "h-full rounded-full transition-[width] duration-500 ease-out",
+          "h-full rounded-full transition-[width] duration-[900ms] ease-out",
           tones[tone],
         )}
-        style={{ width: `${pct}%` }}
+        style={{ width: `${width}%` }}
       />
     </div>
   );

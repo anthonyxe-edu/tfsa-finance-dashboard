@@ -30,7 +30,7 @@ export function ParticleGlobe({
   color,
   intensity = 0.5,
   sphereScale = 0.62,
-  count = 820,
+  count = 950,
 }: {
   color: string;
   intensity?: number;

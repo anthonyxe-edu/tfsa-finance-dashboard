@@ -58,7 +58,9 @@ export function NotificationCards() {
     <section>
       <div className="mb-3 flex items-end justify-between">
         <div>
-          <h2 className="text-sm font-semibold text-fg">Notifications</h2>
+          <h2 className="font-title text-base tracking-wide text-fg">
+            Notifications
+          </h2>
           <p className="text-xs text-muted">
             {notes.length
               ? `Swipe to see more${notes.length > 6 ? ` · ${notes.length} total` : ""}`

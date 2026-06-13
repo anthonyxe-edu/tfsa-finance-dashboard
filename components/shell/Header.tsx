@@ -11,7 +11,7 @@ export function Header() {
   return (
     <header className="sticky top-0 z-20 border-b border-border bg-canvas/85 backdrop-blur">
       <div className="flex h-16 items-center justify-between gap-3 px-5 sm:px-8">
-        <h1 className="min-w-0 truncate text-lg font-semibold">
+        <h1 className="font-title min-w-0 truncate text-xl tracking-wide">
           {activeLabel(pathname)}
         </h1>
         <NotificationBell />

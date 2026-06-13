@@ -2,19 +2,20 @@
 import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip } from "recharts";
 import { fmtCurrency0 } from "@/lib/format";
 
+// Lime-led categorical palette, harmonious on the warm-charcoal background.
 export const CATEGORY_PALETTE = [
-  "#3b82f6",
-  "#10b981",
-  "#f59e0b",
-  "#f43f5e",
-  "#38bdf8",
-  "#a78bfa",
-  "#fb7185",
-  "#34d399",
-  "#fbbf24",
-  "#60a5fa",
-  "#c084fc",
-  "#2dd4bf",
+  "#9dff3c", // lime (brand)
+  "#2dd4bf", // teal
+  "#f59e0b", // amber
+  "#fb7185", // rose
+  "#a78bfa", // violet
+  "#38bdf8", // sky
+  "#fbbf24", // gold
+  "#34d399", // emerald
+  "#f472b6", // pink
+  "#c4e64a", // muted lime
+  "#5eead4", // light teal
+  "#818cf8", // indigo
 ];
 
 type Slice = { name: string; value: number };

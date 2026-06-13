@@ -1,4 +1,5 @@
 "use client";
+import { useEffect, useState } from "react";
 import { fmtCurrency0 } from "@/lib/format";
 import { ParticleGlobe } from "./ParticleGlobe";
 
@@ -46,7 +47,13 @@ export function FrugalityOrb({
         : "good";
   const hex = TONES[toneKey];
 
-  const dashoffset = C * (1 - fill);
+  // Animate the ring from empty → target on mount (smooth fill-in like the globe).
+  const [mounted, setMounted] = useState(false);
+  useEffect(() => {
+    const id = requestAnimationFrame(() => setMounted(true));
+    return () => cancelAnimationFrame(id);
+  }, []);
+  const dashoffset = mounted ? C * (1 - fill) : C;
 
   return (
     <div
@@ -82,7 +89,7 @@ export function FrugalityOrb({
           className="h-[58%] w-[58%] rounded-full"
           style={{
             background:
-              "radial-gradient(circle, rgba(11,17,32,0.92) 36%, rgba(11,17,32,0.6) 60%, transparent 78%)",
+              "radial-gradient(circle, rgba(12,13,10,0.92) 36%, rgba(12,13,10,0.6) 60%, transparent 78%)",
           }}
         />
       </div>
@@ -109,7 +116,8 @@ export function FrugalityOrb({
           strokeDashoffset={dashoffset}
           transform={`rotate(-90 ${SIZE / 2} ${SIZE / 2})`}
           style={{
-            transition: "stroke-dashoffset 700ms ease, stroke 400ms ease",
+            transition:
+              "stroke-dashoffset 1100ms cubic-bezier(0.22,1,0.36,1), stroke 400ms ease",
             filter: `drop-shadow(0 0 6px ${hex})`,
           }}
         />

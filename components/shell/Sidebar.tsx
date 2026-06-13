@@ -14,7 +14,7 @@ export function Sidebar() {
           <Wallet size={18} />
         </span>
         <span className="leading-tight">
-          <span className="block text-sm font-semibold">Finance</span>
+          <span className="font-title block text-base tracking-wide">Finance</span>
           <span className="block text-[11px] text-muted">TFSA &amp; Spending</span>
         </span>
       </Link>
