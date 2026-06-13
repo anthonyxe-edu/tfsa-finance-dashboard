@@ -100,4 +100,5 @@ export type AppNotification = {
   message: string;
   ts: number;
   read: boolean;
+  severity?: "normal" | "urgent";
 };

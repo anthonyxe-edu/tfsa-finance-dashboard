@@ -38,6 +38,8 @@ export function buildNotifications(args: {
       settings.etfLowPct,
     );
     if (move === "flat") continue;
+    // A "big" move (≥2× the threshold or ≥5%) is flagged urgent for the cards.
+    const big = Math.abs(q.dayChangePct) >= Math.max(5, 2 * settings.etfBoomPct);
     out.push({
       id: `etf-${q.ticker}-${today}-${move}`,
       type: "etf",
@@ -47,6 +49,7 @@ export function buildNotifications(args: {
           : `${q.ticker} is down: ${fmtPct(q.dayChangePct)} today ($${q.price.toFixed(2)}).`,
       ts: now,
       read: false,
+      severity: big ? "urgent" : "normal",
     });
   }
 

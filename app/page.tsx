@@ -1,28 +1,39 @@
 "use client";
 import Link from "next/link";
+import { PiggyBank, TrendingUp, TrendingDown, ArrowRight } from "lucide-react";
 import {
-  PiggyBank,
-  TrendingUp,
-  Target,
-  ArrowRight,
-  TrendingDown,
-} from "lucide-react";
-import { useHoldings, useGoals, useNotifications } from "@/hooks/useDb";
+  useHoldings,
+  useGoals,
+  useRules,
+  useTransactions,
+  useKV,
+} from "@/hooks/useDb";
 import { useQuotes } from "@/hooks/useQuotes";
-import { Card } from "@/components/ui/Card";
+import { useIncome } from "@/hooks/useIncome";
+import { FrugalityOrb } from "@/components/home/FrugalityOrb";
+import { NotificationCards } from "@/components/home/NotificationCards";
 import { StatTile } from "@/components/ui/StatTile";
 import { CashBalanceTile } from "@/components/overview/CashBalanceTile";
+import { MonthlyIncomeTile } from "@/components/overview/MonthlyIncomeTile";
 import { Money } from "@/components/ui/Money";
 import { Badge } from "@/components/ui/Badge";
-import { ProgressBar } from "@/components/ui/ProgressBar";
+import { Card } from "@/components/ui/Card";
 import { AdviceList } from "@/components/lifecontext/AdviceList";
-import { fmtPct, fmtCurrency0 } from "@/lib/format";
+import { monthSpendTotal } from "@/lib/analysis";
+import { currentMonth, fmtMonthLabel, fmtPct } from "@/lib/format";
+import { KV_KEYS } from "@/lib/db";
 
-export default function OverviewPage() {
+export default function HomePage() {
   const holdings = useHoldings();
   const { quotes } = useQuotes(holdings.map((h) => h.ticker));
   const goals = useGoals();
-  const notes = useNotifications();
+  const rules = useRules();
+  const txns = useTransactions();
+  const manualIncome = useKV<number>(KV_KEYS.monthlyIncome, 0);
+
+  const month = currentMonth();
+  const income = useIncome(month, manualIncome);
+  const spend = monthSpendTotal(txns, rules, month);
 
   let tfsaValue = 0;
   let prevValue = 0;
@@ -35,17 +46,33 @@ export default function OverviewPage() {
   const dayChange = tfsaValue - prevValue;
   const dayPct = prevValue ? (dayChange / prevValue) * 100 : 0;
 
-  const topGoal = [...goals]
-    .filter((g) => g.target > 0)
-    .sort((a, b) => b.saved / b.target - a.saved / a.target)[0];
-  const goalPct = topGoal
-    ? Math.min(100, (topGoal.saved / topGoal.target) * 100)
-    : 0;
+  const sourceLabel =
+    income.source === "gmail"
+      ? "income via gmail"
+      : income.source === "manual" && manualIncome > 0
+        ? "manual income"
+        : undefined;
 
   return (
-    <div className="space-y-5">
+    <div className="space-y-8">
+      {/* Hero: frugality orb */}
+      <section className="flex flex-col items-center pt-1 text-center">
+        <p className="text-xs font-medium tracking-wider text-muted uppercase">
+          {fmtMonthLabel(month)} · budget used
+        </p>
+        <div className="mt-3">
+          <FrugalityOrb
+            income={income.income}
+            spend={spend}
+            sourceLabel={sourceLabel}
+          />
+        </div>
+      </section>
+
+      {/* Key stats */}
       <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
         <CashBalanceTile />
+        <MonthlyIncomeTile income={income} manual={manualIncome} />
         <StatTile
           label="TFSA value"
           value={<Money value={tfsaValue} />}
@@ -60,11 +87,7 @@ export default function OverviewPage() {
           label="TFSA today"
           value={<Money value={dayChange} colorBySign showSign />}
           icon={
-            dayChange >= 0 ? (
-              <TrendingUp size={18} />
-            ) : (
-              <TrendingDown size={18} />
-            )
+            dayChange >= 0 ? <TrendingUp size={18} /> : <TrendingDown size={18} />
           }
           sub={
             holdings.length ? (
@@ -76,86 +99,26 @@ export default function OverviewPage() {
             )
           }
         />
-        <StatTile
-          label="Top goal"
-          value={
-            topGoal ? (
-              <span className="tnum">{goalPct.toFixed(0)}%</span>
-            ) : (
-              <span className="text-faint">—</span>
-            )
-          }
-          icon={<Target size={18} />}
-          sub={
-            topGoal ? (
-              <span className="truncate text-muted">{topGoal.name}</span>
-            ) : (
-              <span className="text-faint">set a goal</span>
-            )
-          }
-        />
       </div>
 
-      <div className="grid items-start gap-5 lg:grid-cols-3">
-        <Card
-          title="What to watch this month"
-          subtitle="Living-below-means insights"
-          className="lg:col-span-2"
-          action={
-            <Link
-              href="/life-context"
-              className="inline-flex items-center gap-1 text-xs text-primary hover:underline"
-            >
-              Details <ArrowRight size={13} />
-            </Link>
-          }
-        >
-          <AdviceList limit={4} />
-        </Card>
+      {/* Notification cards */}
+      <NotificationCards />
 
-        <Card
-          title="Recent alerts"
-          action={
-            <Link
-              href="/notifications"
-              className="inline-flex items-center gap-1 text-xs text-primary hover:underline"
-            >
-              All <ArrowRight size={13} />
-            </Link>
-          }
-        >
-          {notes.length ? (
-            <ul className="space-y-2.5">
-              {notes.slice(0, 5).map((n) => (
-                <li key={n.id} className="text-sm">
-                  <span className={n.read ? "text-muted" : "text-fg"}>
-                    {n.message}
-                  </span>
-                </li>
-              ))}
-            </ul>
-          ) : (
-            <p className="text-sm text-muted">No alerts yet.</p>
-          )}
-        </Card>
-      </div>
-
-      {topGoal && (
-        <Card title="Top goal progress">
-          <div className="flex items-center justify-between text-sm">
-            <span className="font-medium text-fg">{topGoal.name}</span>
-            <span className="text-muted tnum">
-              {fmtCurrency0(topGoal.saved)} of {fmtCurrency0(topGoal.target)}
-            </span>
-          </div>
-          <ProgressBar
-            value={topGoal.saved}
-            max={topGoal.target || 1}
-            tone={goalPct >= 100 ? "gain" : "primary"}
-            className="mt-2"
-          />
-        </Card>
-      )}
+      {/* Living-below-means advice */}
+      <Card
+        title="What to watch this month"
+        subtitle="Living-below-means insights"
+        action={
+          <Link
+            href="/life-context"
+            className="inline-flex items-center gap-1 text-xs text-primary hover:underline"
+          >
+            Details <ArrowRight size={13} />
+          </Link>
+        }
+      >
+        <AdviceList limit={4} />
+      </Card>
     </div>
   );
 }

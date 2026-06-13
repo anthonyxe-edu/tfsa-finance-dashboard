@@ -19,6 +19,16 @@ export function monthlyByCategory(txns: Txn[], rules: CategoryRule[]): MonthMap 
   return out;
 }
 
+/** Total spend (across all categories) for one "yyyy-mm" month. */
+export function monthSpendTotal(
+  txns: Txn[],
+  rules: CategoryRule[],
+  month: string,
+): number {
+  const map = monthlyByCategory(txns, rules)[month] ?? {};
+  return Object.values(map).reduce((a, b) => a + b, 0);
+}
+
 /** Trailing 3-month average for a category across the history map. */
 export function baseline(history: MonthMap, category: string): number {
   const months = Object.keys(history).sort().slice(-3);

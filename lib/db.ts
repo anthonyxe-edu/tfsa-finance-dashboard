@@ -57,4 +57,5 @@ export const KV_KEYS = {
   settings: "settings",
   contributionRoom: "contributionRoom",
   checkingBalance: "checkingBalance",
+  monthlyIncome: "monthlyIncome",
 } as const;
