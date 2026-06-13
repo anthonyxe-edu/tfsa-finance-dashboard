@@ -21,6 +21,8 @@ const DEFAULT_SENDERS = [
   "interac.ca",
 ];
 
+// Targets "sent you $475.76" (Interac subject format) first, falls back to any $X.XX.
+const SENT_YOU_RE = /sent you \$\s?([\d,]+\.?\d*)/i;
 const AMOUNT_RE = /\$\s?([\d,]+\.\d{2})/;
 
 async function getAccessToken(): Promise<string | null> {
@@ -98,7 +100,8 @@ export async function GET(req: NextRequest) {
     };
     const subject =
       msg.payload?.headers?.find((h) => h.name === "Subject")?.value ?? "";
-    const match = AMOUNT_RE.exec(`${subject} ${msg.snippet ?? ""}`);
+    const haystack = `${subject} ${msg.snippet ?? ""}`;
+    const match = SENT_YOU_RE.exec(haystack) ?? AMOUNT_RE.exec(haystack);
     if (match) {
       total += parseFloat(match[1].replace(/,/g, ""));
       count += 1;
