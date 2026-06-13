@@ -1,0 +1,22 @@
+# dependencies
+node_modules/
+.pnp
+.pnp.js
+
+# next.js
+.next/
+out/
+build/
+
+# secrets / local state (NEVER commit)
+.env
+.env.local
+.plaid-store.json
+
+# misc
+.DS_Store
+*.log
+npm-debug.log*
+.vercel
+*.tsbuildinfo
+next-env.d.ts
