@@ -1,5 +1,6 @@
 "use client";
 import { useMemo } from "react";
+import { Trash2 } from "lucide-react";
 import { db } from "@/lib/db";
 import { categorize } from "@/lib/categorize";
 import { CATEGORIES } from "@/lib/categories";
@@ -47,7 +48,8 @@ export function TransactionsPanel({
             <th className="py-2 pr-3 font-medium">Date</th>
             <th className="py-2 pr-3 font-medium">Merchant</th>
             <th className="py-2 pr-3 font-medium">Category</th>
-            <th className="py-2 text-right font-medium">Amount</th>
+            <th className="py-2 pr-3 text-right font-medium">Amount</th>
+            <th className="py-2" />
           </tr>
         </thead>
         <tbody>
@@ -79,12 +81,21 @@ export function TransactionsPanel({
                     ))}
                   </Select>
                 </td>
-                <td className="py-2 text-right tnum">
+                <td className="py-2 pr-3 text-right tnum">
                   {t.amount < 0 ? (
                     <span className="text-gain">+{fmtCurrency(-t.amount)}</span>
                   ) : (
                     <span className="text-fg">{fmtCurrency(t.amount)}</span>
                   )}
+                </td>
+                <td className="py-2 text-right">
+                  <button
+                    onClick={() => db.transactions.delete(t.id)}
+                    aria-label={`Delete ${t.merchant ?? t.name}`}
+                    className="cursor-pointer text-faint transition-colors hover:text-loss"
+                  >
+                    <Trash2 size={14} />
+                  </button>
                 </td>
               </tr>
             );

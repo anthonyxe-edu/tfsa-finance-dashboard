@@ -1,6 +1,6 @@
 import type { Txn, CategoryRule } from "@/lib/types";
 
-/** Plaid Personal Finance Category (primary) -> friendly display category. */
+/** Raw category code (primary) -> friendly display category (used for imported data). */
 export const PFC_MAP: Record<string, string> = {
   FOOD_AND_DRINK: "Food & Drink",
   GENERAL_MERCHANDISE: "Shopping",
@@ -21,7 +21,8 @@ export const PFC_MAP: Record<string, string> = {
 };
 
 /**
- * Resolve a transaction's category. User rules win over Plaid's PFC.
+ * Resolve a transaction's category. User rules win first, then an explicit
+ * category on the transaction, then the raw code map.
  * Among rules, the most specific (longest pattern) wins.
  */
 export function categorize(txn: Txn, rules: CategoryRule[]): string {
@@ -30,6 +31,7 @@ export function categorize(txn: Txn, rules: CategoryRule[]): string {
     const hay = (r.matchType === "merchant" ? txn.merchant ?? "" : txn.name).toLowerCase();
     if (hay.includes(r.pattern.toLowerCase())) return r.category;
   }
+  if (txn.category) return txn.category;
   if (txn.pfcPrimary && PFC_MAP[txn.pfcPrimary]) return PFC_MAP[txn.pfcPrimary];
   return "Uncategorized";
 }

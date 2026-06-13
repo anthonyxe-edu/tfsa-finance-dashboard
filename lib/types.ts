@@ -8,6 +8,7 @@ export const TxnSchema = z.object({
   amount: z.number(), // positive = money out (spend), negative = money in
   pfcPrimary: z.string().nullable(),
   pfcDetailed: z.string().nullable(),
+  category: z.string().nullable().optional(), // explicit category for manual entries
 });
 export type Txn = z.infer<typeof TxnSchema>;
 
@@ -91,16 +92,6 @@ export const DEFAULT_LIFE_CONTEXT: LifeContext = {
   familyStatus: "single",
   plannedVacations: [],
   emergencyBufferTarget: 0,
-};
-
-export type AccountBalance = {
-  id: string;
-  name: string;
-  subtype: string | null;
-  type: string | null;
-  available: number | null;
-  current: number | null;
-  iso: string | null;
 };
 
 export type AppNotification = {

@@ -1,72 +1,64 @@
 # TFSA & Personal Finance Dashboard
 
-A **local, single-user** finance dashboard: links a bank account via the **Plaid sandbox**,
-categorizes and visualizes spending, tracks **TFSA** assets and **ETF** prices with booming/low
-alerts, manages saving goals, and gives rule-based "living below means" advice tailored to your
-life circumstances.
+A **personal, fully client-side** finance dashboard. No bank linking, no backend database — your
+data lives in **your browser's storage (IndexedDB)** on whatever device you open it on. Deploy it to
+Vercel and add it to your iPhone home screen as a **standalone web app**.
 
-Everything runs on your machine. Your entered data (TFSA assets, goals, life context, rules) lives
-in **your browser's storage (IndexedDB)**. The only outbound network calls are server-side to Plaid
-and to a keyless ETF quote source — nothing is sent anywhere else.
+Track **TFSA** assets with **live ETF prices** and booming/low alerts, log **spending** (manually or
+via CSV import) for category breakdowns and trends, manage **saving goals**, and get rule-based
+"living below means" advice tailored to your life circumstances.
 
-## One-time setup
+## Run locally
 
-1. **Plaid sandbox keys** (free): sign up at <https://dashboard.plaid.com>, then copy your
-   **sandbox** `client_id` and `secret`.
+```bash
+npm install
+npm run dev
+```
 
-   ```bash
-   cp .env.local.example .env.local
-   # edit .env.local and paste your PLAID_CLIENT_ID and PLAID_SECRET
-   ```
+Open <http://localhost:3000>.
 
-2. **Install & run:**
+## Deploy + add to your iPhone home screen
 
-   ```bash
-   npm install
-   npm run dev
-   ```
+1. Push this repo to GitHub and import it at <https://vercel.com/new> (zero config — it's a standard
+   Next.js app). The only API route, `/api/quotes`, runs as a Vercel serverless function.
+2. Open your Vercel URL in **Safari on your iPhone**.
+3. Tap **Share → Add to Home Screen**. It launches full-screen (standalone) with its own icon, like
+   a native app.
 
-3. Open <http://localhost:3000> in Safari.
+> Data is stored per-device in the browser. The home-screen app and desktop Safari keep separate
+> data; there's no cloud sync (by design — nothing leaves your device except anonymous ETF quote
+> lookups).
 
-4. Click **Link account** (top-right) and log in with the Plaid sandbox test credentials:
-   - username: `user_good`
-   - password: `pass_good`
-   Then press **Sync** to pull balances and transactions.
+## Using it
 
-5. Add your **TFSA holdings** (ticker + units + book cost — TSX ETFs use the `.TO` suffix, e.g.
-   `XEQT.TO`), set your **contribution room**, create **goals**, and fill in your **Life Context**.
-
-## Features
-
-- **Overview** — checking balance, TFSA value & day change, top goal, this-month insights, alerts.
-- **Spending** — category donut, monthly trend, top merchants, vs-baseline deltas, and inline
-  re-categorization that teaches reusable rules.
-- **TFSA** — manual holdings with **live prices**, day change, 30-day sparkline, gain/loss, plus a
-  contribution-room tracker.
-- **Goals** — targets with progress and required monthly pace; built-in Emergency & Vacation buckets.
-- **Life Context** — partner/shared costs, family status, planned vacations, emergency buffer; drives
-  deterministic "living below means" advice.
-- **Notifications** — in-app center + optional desktop browser alerts for ETF booming/low,
-  saving-month overspend, and goal milestones, with configurable thresholds.
+- **TFSA** — add your ETF holdings (ticker + units + book cost; TSX ETFs use `.TO`, e.g. `XEQT.TO`).
+  Live prices, day change, 30-day sparkline, gain/loss, and a contribution-room tracker.
+- **Spending** — add transactions manually, or **Import CSV** (columns: `date, description, amount`
+  with positive = expense, plus optional `category`). Get a category donut, monthly trend, top
+  merchants, and vs-baseline deltas. Change any transaction's category to teach a reusable rule.
+- **Goals** — targets with progress and monthly pace; built-in Emergency & Vacation buckets.
+- **Life Context** — partner/shared costs, family status, planned vacations, emergency buffer. Drives
+  the deterministic advice.
+- **Notifications** — in-app center + optional browser notifications for ETF booming/low, saving-month
+  overspend, and goal milestones, with configurable thresholds. Set the chequing balance on Overview.
 
 ## Tech
 
-Next.js (App Router) · TypeScript · Tailwind CSS v4 · Recharts · Plaid Node SDK · Dexie (IndexedDB)
-· Zod · Vitest.
+Next.js 16 (App Router) · TypeScript · Tailwind CSS v4 · Recharts · Dexie (IndexedDB) · Zod · Vitest.
+Installable PWA (web manifest + apple-touch icon).
 
 ## Scripts
 
 ```bash
 npm run dev      # local dev server
 npm run build    # production build + typecheck
-npm test         # unit tests (categorization, analysis, quotes)
+npm test         # unit tests (categorization, analysis, quotes, csv)
 ```
 
 ## Notes
 
 - ETF quotes come from a keyless Yahoo Finance endpoint via the `/api/quotes` proxy. Prices are
   delayed and intended for personal tracking, not trading decisions.
-- Plaid runs in **sandbox** mode — balances and transactions are realistic test data, not a real bank.
 - Design language follows a data-dense dark fintech system generated with the `ui-ux-pro-max` skill.
 
-See `docs/superpowers/specs/` and `docs/superpowers/plans/` for the design spec and implementation plan.
+See `docs/superpowers/` for the original design spec and implementation plan.

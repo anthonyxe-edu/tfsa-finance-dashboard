@@ -45,4 +45,15 @@ describe("categorize", () => {
       "Uncategorized",
     );
   });
+
+  it("explicit txn.category wins over the PFC map", () => {
+    expect(categorize(txn({ category: "Dining Out" }), [])).toBe("Dining Out");
+  });
+
+  it("a matching rule still overrides an explicit category", () => {
+    const rules: CategoryRule[] = [
+      { id: "r1", matchType: "merchant", pattern: "Uber Eats", category: "Rules Win" },
+    ];
+    expect(categorize(txn({ category: "Manual" }), rules)).toBe("Rules Win");
+  });
 });

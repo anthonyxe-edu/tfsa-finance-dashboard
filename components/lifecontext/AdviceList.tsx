@@ -1,7 +1,6 @@
 "use client";
 import { Lightbulb, CheckCircle2 } from "lucide-react";
-import { usePlaid } from "@/components/providers/PlaidProvider";
-import { useRules, useGoals, useKV } from "@/hooks/useDb";
+import { useRules, useGoals, useKV, useTransactions } from "@/hooks/useDb";
 import { generateAdvice } from "@/lib/analysis";
 import { currentMonth } from "@/lib/format";
 import { KV_KEYS } from "@/lib/db";
@@ -13,7 +12,7 @@ import {
 } from "@/lib/types";
 
 export function AdviceList({ limit }: { limit?: number }) {
-  const { transactions } = usePlaid();
+  const transactions = useTransactions();
   const rules = useRules();
   const goals = useGoals();
   const settings = useKV<Settings>(KV_KEYS.settings, DEFAULT_SETTINGS);

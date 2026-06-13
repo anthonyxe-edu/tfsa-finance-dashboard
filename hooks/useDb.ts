@@ -16,6 +16,9 @@ export const useRules = () =>
 
 export const useGoals = () => useLiveQuery(() => db.goals.toArray(), [], []);
 
+export const useTransactions = () =>
+  useLiveQuery(() => db.transactions.toArray(), [], []);
+
 export const useNotifications = () =>
   useLiveQuery(
     () => db.notifications.orderBy("ts").reverse().toArray(),

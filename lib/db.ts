@@ -4,6 +4,7 @@ import type {
   CategoryRule,
   Goal,
   AppNotification,
+  Txn,
 } from "@/lib/types";
 
 export interface KV {
@@ -17,6 +18,7 @@ class FinanceDB extends Dexie {
   goals!: Table<Goal, string>;
   kv!: Table<KV, string>;
   notifications!: Table<AppNotification, string>;
+  transactions!: Table<Txn, string>;
 
   constructor() {
     super("tfsa-finance");
@@ -26,6 +28,14 @@ class FinanceDB extends Dexie {
       goals: "id, kind",
       kv: "key",
       notifications: "id, ts, read",
+    });
+    this.version(2).stores({
+      etfHoldings: "id, ticker",
+      categoryRules: "id",
+      goals: "id, kind",
+      kv: "key",
+      notifications: "id, ts, read",
+      transactions: "id, date",
     });
   }
 }
@@ -46,7 +56,5 @@ export const KV_KEYS = {
   lifeContext: "lifeContext",
   settings: "settings",
   contributionRoom: "contributionRoom",
-  accounts: "accounts",
-  transactions: "transactions",
-  lastSync: "lastSync",
+  checkingBalance: "checkingBalance",
 } as const;

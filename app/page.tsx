@@ -1,18 +1,17 @@
 "use client";
 import Link from "next/link";
 import {
-  Wallet,
   PiggyBank,
   TrendingUp,
   Target,
   ArrowRight,
   TrendingDown,
 } from "lucide-react";
-import { usePlaid } from "@/components/providers/PlaidProvider";
 import { useHoldings, useGoals, useNotifications } from "@/hooks/useDb";
 import { useQuotes } from "@/hooks/useQuotes";
 import { Card } from "@/components/ui/Card";
 import { StatTile } from "@/components/ui/StatTile";
+import { CashBalanceTile } from "@/components/overview/CashBalanceTile";
 import { Money } from "@/components/ui/Money";
 import { Badge } from "@/components/ui/Badge";
 import { ProgressBar } from "@/components/ui/ProgressBar";
@@ -20,17 +19,10 @@ import { AdviceList } from "@/components/lifecontext/AdviceList";
 import { fmtPct, fmtCurrency0 } from "@/lib/format";
 
 export default function OverviewPage() {
-  const { accounts, linked } = usePlaid();
   const holdings = useHoldings();
   const { quotes } = useQuotes(holdings.map((h) => h.ticker));
   const goals = useGoals();
   const notes = useNotifications();
-
-  const checking =
-    accounts.find((a) => a.subtype === "checking") ??
-    accounts.find((a) => a.type === "depository") ??
-    accounts[0];
-  const checkingBal = checking?.current ?? checking?.available ?? 0;
 
   let tfsaValue = 0;
   let prevValue = 0;
@@ -53,26 +45,7 @@ export default function OverviewPage() {
   return (
     <div className="space-y-5">
       <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
-        <StatTile
-          label="Checking balance"
-          value={
-            linked ? (
-              <Money value={checkingBal} />
-            ) : (
-              <span className="text-faint">—</span>
-            )
-          }
-          icon={<Wallet size={18} />}
-          sub={
-            linked ? (
-              <span className="truncate text-muted">
-                {checking?.name ?? "—"}
-              </span>
-            ) : (
-              <span className="text-faint">link an account</span>
-            )
-          }
-        />
+        <CashBalanceTile />
         <StatTile
           label="TFSA value"
           value={<Money value={tfsaValue} />}

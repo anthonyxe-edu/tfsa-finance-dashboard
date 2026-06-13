@@ -1,4 +1,4 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { Fira_Sans, Fira_Code } from "next/font/google";
 import "./globals.css";
 import { Sidebar } from "@/components/shell/Sidebar";
@@ -22,6 +22,19 @@ const firaCode = Fira_Code({
 export const metadata: Metadata = {
   title: "Finance Dashboard",
   description: "Personal TFSA & spending dashboard",
+  applicationName: "Finance",
+  appleWebApp: {
+    capable: true,
+    title: "Finance",
+    statusBarStyle: "black-translucent",
+  },
+  icons: { icon: "/icon.svg" },
+};
+
+export const viewport: Viewport = {
+  themeColor: "#0b1120",
+  width: "device-width",
+  initialScale: 1,
 };
 
 export default function RootLayout({

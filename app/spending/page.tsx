@@ -1,17 +1,12 @@
 "use client";
 import { useMemo, useState } from "react";
-import {
-  Receipt,
-  ArrowUpRight,
-  ArrowDownRight,
-  Link2,
-} from "lucide-react";
-import { usePlaid } from "@/components/providers/PlaidProvider";
-import { useRules } from "@/hooks/useDb";
+import { Receipt, ArrowUpRight, ArrowDownRight } from "lucide-react";
+import { useRules, useTransactions } from "@/hooks/useDb";
 import { monthlyByCategory, baseline } from "@/lib/analysis";
 import { CategoryDonut } from "@/components/spending/CategoryDonut";
 import { TrendChart } from "@/components/spending/TrendChart";
 import { TransactionsPanel } from "@/components/spending/TransactionsPanel";
+import { AddTransactions } from "@/components/spending/AddTransactions";
 import { Card } from "@/components/ui/Card";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { Badge } from "@/components/ui/Badge";
@@ -24,7 +19,7 @@ import {
 } from "@/lib/format";
 
 export default function SpendingPage() {
-  const { transactions } = usePlaid();
+  const transactions = useTransactions();
   const rules = useRules();
 
   const byMonth = useMemo(
@@ -78,23 +73,20 @@ export default function SpendingPage() {
 
   const monthTotal = Object.values(current).reduce((s, v) => s + v, 0);
 
-  if (transactions.length === 0) {
-    return (
-      <EmptyState
-        icon={<Receipt size={20} />}
-        title="No transactions yet"
-        description="Link your bank account from the header, then hit Sync to pull transactions and see your spending breakdown."
-        action={
-          <span className="inline-flex items-center gap-1.5 text-xs text-muted">
-            <Link2 size={14} /> Use “Link account” in the top bar
-          </span>
-        }
-      />
-    );
-  }
-
   return (
     <div className="space-y-5">
+      <Card title="Add transactions" subtitle="Enter manually or import a CSV">
+        <AddTransactions />
+      </Card>
+
+      {transactions.length === 0 ? (
+        <EmptyState
+          icon={<Receipt size={20} />}
+          title="No transactions yet"
+          description="Add a transaction above or import a CSV file to see your spending breakdown, categories, and trends."
+        />
+      ) : (
+        <>
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div className="flex items-center gap-3">
           <Select
@@ -189,6 +181,8 @@ export default function SpendingPage() {
       <Card title="Transactions" subtitle="Change a category to teach a rule">
         <TransactionsPanel txns={transactions} rules={rules} />
       </Card>
+        </>
+      )}
     </div>
   );
 }

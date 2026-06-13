@@ -39,6 +39,3 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
-
-# plaid runtime token (NEVER commit)
-.plaid-store.json

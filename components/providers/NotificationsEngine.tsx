@@ -1,9 +1,14 @@
 "use client";
 import { useEffect } from "react";
 import { db, KV_KEYS } from "@/lib/db";
-import { useHoldings, useGoals, useRules, useKV } from "@/hooks/useDb";
+import {
+  useHoldings,
+  useGoals,
+  useRules,
+  useKV,
+  useTransactions,
+} from "@/hooks/useDb";
 import { useQuotes } from "@/hooks/useQuotes";
-import { usePlaid } from "@/components/providers/PlaidProvider";
 import { buildNotifications } from "@/lib/notify";
 import {
   DEFAULT_SETTINGS,
@@ -20,7 +25,7 @@ export function NotificationsEngine() {
   const holdings = useHoldings();
   const goals = useGoals();
   const rules = useRules();
-  const { transactions } = usePlaid();
+  const transactions = useTransactions();
   const settings = useKV<Settings>(KV_KEYS.settings, DEFAULT_SETTINGS);
   const ctx = useKV<LifeContext>(KV_KEYS.lifeContext, DEFAULT_LIFE_CONTEXT);
   const { quotes } = useQuotes(holdings.map((h) => h.ticker));
