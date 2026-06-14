@@ -31,8 +31,10 @@ function useTable<T>(
       if (active && data) setRows((data as Row[]).map(map));
     };
     load();
+    // Unique channel name per subscription — Supabase reuses channels by name,
+    // so a shared name across components/StrictMode throws "add callbacks after subscribe".
     const channel = supabase
-      .channel(`rt-${table}`)
+      .channel(`rt-${table}-${Math.random().toString(36).slice(2)}`)
       .on("postgres_changes", { event: "*", schema: "public", table }, load)
       .subscribe();
     return () => {
@@ -112,7 +114,7 @@ export function useKV<T>(key: string, fallback: T): T {
     };
     load();
     const channel = supabase
-      .channel(`rt-kv-${key}`)
+      .channel(`rt-kv-${key}-${Math.random().toString(36).slice(2)}`)
       .on(
         "postgres_changes",
         { event: "*", schema: "public", table: "app_kv", filter: `key=eq.${key}` },

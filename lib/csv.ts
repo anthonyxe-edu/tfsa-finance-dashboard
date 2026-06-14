@@ -39,6 +39,23 @@ export function parseCsv(text: string): string[][] {
   return rows.filter((r) => r.some((cell) => cell.trim() !== ""));
 }
 
+/**
+ * Bank exports use negative amounts for debits (spending) — so a statement has
+ * many negative rows (debits) and few positive ones (deposits). The app's own
+ * convention is the opposite (positive = expense). Compare *counts*: if negatives
+ * outnumber positives the file is a bank export and expenses should be flipped to
+ * positive. (Counts, not sums, so a single big paycheque deposit can't flip it.)
+ */
+export function isBankSignConvention(amounts: number[]): boolean {
+  let pos = 0;
+  let neg = 0;
+  for (const a of amounts) {
+    if (a > 0) pos++;
+    else if (a < 0) neg++;
+  }
+  return neg > pos;
+}
+
 /** Normalize common date formats to ISO yyyy-mm-dd. Returns null if unparseable. */
 export function normalizeDate(input: string): string | null {
   const s = input.trim();

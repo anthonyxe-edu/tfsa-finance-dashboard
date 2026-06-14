@@ -3,7 +3,8 @@ import { useRef, useState, type ChangeEvent, type FormEvent } from "react";
 import { Plus, Upload, Trash2 } from "lucide-react";
 import { db } from "@/lib/db";
 import { uid } from "@/lib/format";
-import { parseCsv, normalizeDate } from "@/lib/csv";
+import { parseCsv, normalizeDate, isBankSignConvention } from "@/lib/csv";
+import { detectMerchantCategory } from "@/lib/merchants";
 import { Button } from "@/components/ui/Button";
 import { Field, Input, Select } from "@/components/ui/Form";
 import { CATEGORIES } from "@/lib/categories";
@@ -24,9 +25,16 @@ function makeTxn(p: {
     amount: p.amount,
     pfcPrimary: null,
     pfcDetailed: null,
-    category: p.category,
+    // Persist the auto-detected category so it flows to the chart/notifications.
+    category: p.category ?? detectMerchantCategory(p.name) ?? null,
   };
 }
+
+const num = (s: string | undefined): number | null => {
+  if (s == null) return null;
+  const v = parseFloat(String(s).replace(/[^0-9.\-]/g, ""));
+  return isNaN(v) ? null : v;
+};
 
 export function AddTransactions() {
   const today = new Date().toISOString().slice(0, 10);
@@ -83,28 +91,69 @@ export function AddTransactions() {
         h.includes("payee"),
     );
     const ci = header.findIndex((h) => h.includes("categor"));
-    if (di < 0 || ai < 0) {
-      setMsg("CSV needs at least 'date' and 'amount' columns.");
+    const debitI = header.findIndex(
+      (h) => h.includes("debit") || h.includes("withdraw"),
+    );
+    const creditI = header.findIndex(
+      (h) => h.includes("credit") || h.includes("deposit"),
+    );
+
+    if (di < 0 || (ai < 0 && debitI < 0 && creditI < 0)) {
+      setMsg("CSV needs a date column and an amount (or debit/credit) column.");
       e.target.value = "";
       return;
     }
-    const txns: Txn[] = [];
+
+    type Raw = {
+      date: string;
+      name: string;
+      category: string | null;
+      raw: number;
+      debit: number;
+      credit: number;
+    };
+    const raws: Raw[] = [];
     for (let r = 1; r < rows.length; r++) {
       const row = rows[r];
       const date = normalizeDate(row[di] ?? "");
       if (!date) continue;
-      const amt = parseFloat((row[ai] ?? "").replace(/[^0-9.\-]/g, ""));
-      if (isNaN(amt)) continue;
       const name = (ni >= 0 ? row[ni] : "")?.trim() || "Transaction";
       const category = ci >= 0 ? (row[ci] ?? "").trim() || null : null;
-      txns.push(makeTxn({ date, name, amount: amt, category }));
+      const raw = ai >= 0 ? num(row[ai]) : null;
+      const debit = debitI >= 0 ? num(row[debitI]) ?? 0 : 0;
+      const credit = creditI >= 0 ? num(row[creditI]) ?? 0 : 0;
+      if (ai >= 0 && raw == null && debitI < 0 && creditI < 0) continue;
+      raws.push({ date, name, category, raw: raw ?? 0, debit, credit });
     }
-    if (txns.length) {
-      await db.transactions.bulkAdd(txns);
-      setMsg(`Imported ${txns.length} transaction${txns.length === 1 ? "" : "s"}.`);
-    } else {
+    if (!raws.length) {
       setMsg("No valid rows found to import.");
+      e.target.value = "";
+      return;
     }
+
+    // Normalize to the app's convention: positive = expense.
+    let note = "";
+    let txnsToAdd: Txn[];
+    if (debitI >= 0 || creditI >= 0) {
+      // Separate debit/credit columns: debit is spend, credit is income.
+      txnsToAdd = raws.map((r) =>
+        makeTxn({ date: r.date, name: r.name, category: r.category, amount: r.debit - r.credit }),
+      );
+      note = " · used debit/credit columns";
+    } else {
+      // Single amount column. Bank exports use negative for debits, so if the
+      // negatives outweigh the positives, flip so expenses come out positive.
+      const bankFormat = isBankSignConvention(raws.map((r) => r.raw));
+      txnsToAdd = raws.map((r) =>
+        makeTxn({ date: r.date, name: r.name, category: r.category, amount: bankFormat ? -r.raw : r.raw }),
+      );
+      if (bankFormat) note = " · detected bank format (negatives = expenses)";
+    }
+
+    await db.transactions.bulkAdd(txnsToAdd);
+    setMsg(
+      `Imported ${txnsToAdd.length} transaction${txnsToAdd.length === 1 ? "" : "s"}${note}.`,
+    );
     e.target.value = "";
   }
 
@@ -189,13 +238,11 @@ export function AddTransactions() {
           <Upload size={15} /> Import CSV
         </Button>
         <span className="text-xs text-faint">
-          Columns: date, description, amount{" "}
-          <span className="text-muted">(positive = expense)</span>. Category is
-          auto-detected from the merchant.
+          Columns: date, description, amount (or debit/credit). Sign is
+          auto-detected; category is auto-detected from the merchant.
         </span>
         {msg && <span className="text-xs text-gain">{msg}</span>}
 
-        {/* Reset — clear all transactions so re-importing a statement can't duplicate */}
         {confirmReset ? (
           <div className="ml-auto flex items-center gap-2">
             <span className="text-xs text-muted">

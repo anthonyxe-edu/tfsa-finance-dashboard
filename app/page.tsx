@@ -95,7 +95,7 @@ export default function HomePage() {
         subtitle="Living-below-means insights"
         action={
           <Link
-            href="/life-context"
+            href="/goals"
             className="inline-flex items-center gap-1 text-xs text-primary hover:underline"
           >
             Details <ArrowRight size={13} />

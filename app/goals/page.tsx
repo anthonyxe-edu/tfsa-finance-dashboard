@@ -1,13 +1,15 @@
 "use client";
 import { Target, Sparkles } from "lucide-react";
 import { db } from "@/lib/db";
-import { uid } from "@/lib/format";
 import { useGoals } from "@/hooks/useDb";
 import { Card } from "@/components/ui/Card";
 import { Button } from "@/components/ui/Button";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { GoalForm } from "@/components/goals/GoalForm";
 import { GoalCard } from "@/components/goals/GoalCard";
+import { GoalPlanner } from "@/components/goals/GoalPlanner";
+import { ContextForm } from "@/components/lifecontext/ContextForm";
+import { AdviceList } from "@/components/lifecontext/AdviceList";
 
 export default function GoalsPage() {
   const goals = useGoals();
@@ -17,7 +19,6 @@ export default function GoalsPage() {
   async function seed() {
     if (!hasEmergency)
       await db.goals.add({
-        id: uid(),
         name: "Emergency fund",
         target: 10000,
         saved: 0,
@@ -26,7 +27,6 @@ export default function GoalsPage() {
       });
     if (!hasVacation)
       await db.goals.add({
-        id: uid(),
         name: "Vacation",
         target: 3000,
         saved: 0,
@@ -37,6 +37,13 @@ export default function GoalsPage() {
 
   return (
     <div className="space-y-5">
+      <Card
+        title="Plan a goal"
+        subtitle="Describe it in plain English — get a realistic savings plan"
+      >
+        <GoalPlanner />
+      </Card>
+
       <Card title="New goal" subtitle="Track anything you're saving toward">
         <GoalForm />
       </Card>
@@ -64,9 +71,24 @@ export default function GoalsPage() {
         <EmptyState
           icon={<Target size={20} />}
           title="No goals yet"
-          description="Add your first saving goal above, or quick-start the recommended Emergency and Vacation buckets."
+          description="Describe a goal in the planner above, add one manually, or quick-start the recommended Emergency and Vacation buckets."
         />
       )}
+
+      <div className="grid items-start gap-5 lg:grid-cols-2">
+        <Card
+          title="Your circumstances"
+          subtitle="Tailors saving advice to your real life"
+        >
+          <ContextForm />
+        </Card>
+        <Card
+          title="Living-below-means insights"
+          subtitle="Generated from your spending this month"
+        >
+          <AdviceList />
+        </Card>
+      </div>
     </div>
   );
 }

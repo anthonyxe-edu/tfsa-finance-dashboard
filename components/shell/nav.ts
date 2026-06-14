@@ -3,7 +3,6 @@ import {
   Receipt,
   PiggyBank,
   Target,
-  HeartHandshake,
   Bell,
   type LucideIcon,
 } from "lucide-react";
@@ -14,8 +13,7 @@ export const NAV: NavItem[] = [
   { href: "/", label: "Overview", icon: LayoutDashboard },
   { href: "/spending", label: "Spending", icon: Receipt },
   { href: "/tfsa", label: "TFSA", icon: PiggyBank },
-  { href: "/goals", label: "Goals", icon: Target },
-  { href: "/life-context", label: "Life Context", icon: HeartHandshake },
+  { href: "/goals", label: "Goals & Life", icon: Target },
   { href: "/notifications", label: "Notifications", icon: Bell },
 ];
 
