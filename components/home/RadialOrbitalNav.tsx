@@ -1,6 +1,5 @@
 "use client";
 import { useEffect, useRef, useState } from "react";
-import Link from "next/link";
 import {
   Receipt,
   PiggyBank,
@@ -12,6 +11,7 @@ import {
   type LucideIcon,
 } from "lucide-react";
 import { cn } from "@/lib/cn";
+import { useZoomNavigate } from "@/hooks/useZoomNavigate";
 import { FrugalityOrb } from "./FrugalityOrb";
 
 type NavNode = {
@@ -47,6 +47,7 @@ export function RadialOrbitalNav({
   const [activeId, setActiveId] = useState<string | null>(null);
   const [reduced, setReduced] = useState(false);
   const pausedRef = useRef(false);
+  const zoomNavigate = useZoomNavigate();
 
   useEffect(() => {
     const mq = window.matchMedia("(prefers-reduced-motion: reduce)");
@@ -165,12 +166,12 @@ export function RadialOrbitalNav({
               <X size={16} />
             </button>
           </div>
-          <Link
-            href={active.href}
+          <button
+            onClick={() => zoomNavigate(active.href, "in")}
             className="mt-4 flex h-11 w-full items-center justify-center gap-1.5 rounded-lg bg-primary text-sm font-semibold text-on-primary transition-colors hover:bg-primary-strong"
           >
             Open {active.label} <ArrowRight size={15} />
-          </Link>
+          </button>
         </div>
       )}
     </section>

@@ -1,4 +1,5 @@
 import type { Quote } from "@/lib/types";
+import { RANGE_MAP, type Range } from "@/lib/ranges";
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
@@ -22,6 +23,36 @@ export function classifyMove(
   if (pct >= boomPct) return "boom";
   if (pct <= lowPct) return "low";
   return "flat";
+}
+
+export type RangeSeries = { ticker: string; closes: number[]; changePct: number };
+
+/** Fetch a ticker's price history for a range (closes + % change). Server-side. */
+export async function fetchHistory(
+  ticker: string,
+  range: Range,
+): Promise<RangeSeries> {
+  const { range: r, interval } = RANGE_MAP[range] ?? RANGE_MAP["1M"];
+  const url = `https://query1.finance.yahoo.com/v8/finance/chart/${encodeURIComponent(
+    ticker,
+  )}?range=${r}&interval=${interval}`;
+  const res = await fetch(url, {
+    headers: { "User-Agent": "Mozilla/5.0" },
+    cache: "no-store",
+  });
+  if (!res.ok) throw new Error(`history ${ticker} failed: ${res.status}`);
+  const json: any = await res.json();
+  const result = json?.chart?.result?.[0];
+  const closes: number[] = (result?.indicators?.quote?.[0]?.close ?? []).filter(
+    (x: unknown): x is number => typeof x === "number",
+  );
+  const first = closes[0] ?? 0;
+  const last = closes[closes.length - 1] ?? first;
+  // For 1D, baseline off the previous close so it matches "today".
+  const baseline =
+    range === "1D" ? (result?.meta?.chartPreviousClose ?? first) : first;
+  const changePct = baseline ? ((last - baseline) / baseline) * 100 : 0;
+  return { ticker, closes, changePct };
 }
 
 /** Fetch a single ticker quote from Yahoo Finance (keyless). Server-side only. */

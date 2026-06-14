@@ -43,16 +43,18 @@ export function NotificationCards() {
     return b.ts - a.ts;
   });
 
-  const cards = sorted.slice(0, 6).map((n) => (
-    <DisplayCard
-      key={n.id}
-      icon={iconFor(n)}
-      title={titleFor(n)}
-      description={n.message}
-      date={relTime(n.ts)}
-      urgent={n.severity === "urgent"}
-    />
-  ));
+  const cards = sorted.slice(0, 6).map((n) => ({
+    id: n.id,
+    node: (
+      <DisplayCard
+        icon={iconFor(n)}
+        title={titleFor(n)}
+        description={n.message}
+        date={relTime(n.ts)}
+        urgent={n.severity === "urgent"}
+      />
+    ),
+  }));
 
   return (
     <section>
