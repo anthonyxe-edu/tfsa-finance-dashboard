@@ -1,8 +1,9 @@
 # TFSA & Personal Finance Dashboard
 
-A **personal, fully client-side** finance dashboard. No bank linking, no backend database — your
-data lives in **your browser's storage (IndexedDB)** on whatever device you open it on. Deploy it to
-Vercel and add it to your iPhone home screen as a **standalone web app**.
+A **personal multi-user** finance dashboard. Sign in with your email (a 6-digit code) and your data
+syncs across your phone and laptop via **Supabase** — each account's data is private (Postgres
+row-level security). Deploy it to Vercel and add it to your iPhone home screen as a **standalone web
+app**.
 
 Track **TFSA** assets with **live ETF prices** and booming/low alerts, log **spending** (manually or
 via CSV import) for category breakdowns and trends, manage **saving goals**, and get rule-based
@@ -25,9 +26,20 @@ Open <http://localhost:3000>.
 3. Tap **Share → Add to Home Screen**. It launches full-screen (standalone) with its own icon, like
    a native app.
 
-> Data is stored per-device in the browser. The home-screen app and desktop Safari keep separate
-> data; there's no cloud sync (by design — nothing leaves your device except anonymous ETF quote
-> lookups).
+### Backend setup (Supabase)
+
+Set these in **Vercel → Settings → Environment Variables** (and `.env.local` for local dev — see
+`.env.example`):
+
+- `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY` — from your Supabase project.
+- `OWNER_EMAIL` — the account that gets Gmail e-transfer income auto-detection (others use manual).
+
+**One-time email setup for the login code:** in Supabase → **Authentication → Email Templates →
+Magic Link**, include `{{ .Token }}` in the template so the email shows a 6-digit code. The free
+built-in email sender is rate-limited; add custom SMTP (e.g. Resend) for heavier use.
+
+> Data lives in Supabase Postgres, scoped per account by row-level security, so the same login shows
+> the same data on every device — and other accounts never see yours.
 
 ## Using it
 

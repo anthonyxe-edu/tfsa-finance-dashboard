@@ -126,9 +126,7 @@ export default function NotificationsPage() {
               <Button
                 variant="ghost"
                 size="sm"
-                onClick={() =>
-                  db.notifications.toCollection().modify({ read: true })
-                }
+                onClick={() => db.notifications.markAllRead()}
               >
                 <Check size={15} /> Mark all read
               </Button>

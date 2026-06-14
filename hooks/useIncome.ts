@@ -1,5 +1,6 @@
 "use client";
 import { useEffect, useState } from "react";
+import { useAuth } from "@/components/auth/AuthProvider";
 
 export type IncomeSource = "loading" | "gmail" | "manual";
 
@@ -16,6 +17,8 @@ export type IncomeState = {
  * if Gmail is unconfigured or finds nothing, falls back to the manual value.
  */
 export function useIncome(month: string, manualFallback: number): IncomeState {
+  const { user } = useAuth();
+  const email = user?.email ?? "";
   const [state, setState] = useState<IncomeState>({
     income: manualFallback,
     source: "loading",
@@ -25,7 +28,7 @@ export function useIncome(month: string, manualFallback: number): IncomeState {
     let cancelled = false;
     setState((s) => ({ ...s, source: "loading" }));
 
-    fetch(`/api/income?month=${month}`)
+    fetch(`/api/income?month=${month}&email=${encodeURIComponent(email)}`)
       .then((r) => r.json())
       .then((d: { income: number | null; count?: number }) => {
         if (cancelled) return;
@@ -42,7 +45,7 @@ export function useIncome(month: string, manualFallback: number): IncomeState {
     return () => {
       cancelled = true;
     };
-  }, [month, manualFallback]);
+  }, [month, manualFallback, email]);
 
   return state;
 }
