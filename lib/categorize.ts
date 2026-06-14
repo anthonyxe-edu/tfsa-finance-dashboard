@@ -1,4 +1,5 @@
 import type { Txn, CategoryRule } from "@/lib/types";
+import { detectMerchantCategory } from "@/lib/merchants";
 
 /** Raw category code (primary) -> friendly display category (used for imported data). */
 export const PFC_MAP: Record<string, string> = {
@@ -21,8 +22,9 @@ export const PFC_MAP: Record<string, string> = {
 };
 
 /**
- * Resolve a transaction's category. User rules win first, then an explicit
- * category on the transaction, then the raw code map.
+ * Resolve a transaction's category. Priority: user rules → an explicit category
+ * on the transaction → imported code map → the built-in merchant knowledge base
+ * (Loblaws → Groceries, etc.) → "Uncategorized" (blank) for unknown merchants.
  * Among rules, the most specific (longest pattern) wins.
  */
 export function categorize(txn: Txn, rules: CategoryRule[]): string {
@@ -33,5 +35,7 @@ export function categorize(txn: Txn, rules: CategoryRule[]): string {
   }
   if (txn.category) return txn.category;
   if (txn.pfcPrimary && PFC_MAP[txn.pfcPrimary]) return PFC_MAP[txn.pfcPrimary];
+  const detected = detectMerchantCategory(`${txn.merchant ?? ""} ${txn.name}`);
+  if (detected) return detected;
   return "Uncategorized";
 }

@@ -56,4 +56,28 @@ describe("categorize", () => {
     ];
     expect(categorize(txn({ category: "Manual" }), rules)).toBe("Rules Win");
   });
+
+  it("detects a known merchant (Loblaws → Groceries)", () => {
+    expect(
+      categorize(txn({ pfcPrimary: null, name: "LOBLAWS #1234", merchant: "Loblaws" }), []),
+    ).toBe("Groceries");
+  });
+
+  it("longest merchant match wins (uber eats → Dining Out, not Transport)", () => {
+    expect(
+      categorize(txn({ pfcPrimary: null, name: "UBER EATS", merchant: "Uber Eats" }), []),
+    ).toBe("Dining Out");
+  });
+
+  it("plain uber → Transport", () => {
+    expect(
+      categorize(txn({ pfcPrimary: null, name: "UBER TRIP HELP.UBER.COM", merchant: "Uber" }), []),
+    ).toBe("Transport");
+  });
+
+  it("unknown merchant stays blank (Uncategorized)", () => {
+    expect(
+      categorize(txn({ pfcPrimary: null, name: "ACME WIDGETS LLC", merchant: "Acme Widgets" }), []),
+    ).toBe("Uncategorized");
+  });
 });

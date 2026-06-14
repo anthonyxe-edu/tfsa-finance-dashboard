@@ -1,12 +1,13 @@
 "use client";
 import { useRef, useState, type ChangeEvent, type FormEvent } from "react";
-import { Plus, Upload } from "lucide-react";
+import { Plus, Upload, Trash2 } from "lucide-react";
 import { db } from "@/lib/db";
 import { uid } from "@/lib/format";
 import { parseCsv, normalizeDate } from "@/lib/csv";
 import { Button } from "@/components/ui/Button";
 import { Field, Input, Select } from "@/components/ui/Form";
 import { CATEGORIES } from "@/lib/categories";
+import { useTransactions } from "@/hooks/useDb";
 import type { Txn } from "@/lib/types";
 
 function makeTxn(p: {
@@ -33,9 +34,11 @@ export function AddTransactions() {
   const [desc, setDesc] = useState("");
   const [amount, setAmount] = useState("");
   const [type, setType] = useState<"expense" | "income">("expense");
-  const [category, setCategory] = useState(CATEGORIES[0] ?? "Shopping");
+  const [category, setCategory] = useState(""); // "" = auto-detect from merchant
   const [msg, setMsg] = useState<string | null>(null);
+  const [confirmReset, setConfirmReset] = useState(false);
   const fileRef = useRef<HTMLInputElement>(null);
+  const txns = useTransactions();
 
   async function add(e: FormEvent) {
     e.preventDefault();
@@ -46,12 +49,18 @@ export function AddTransactions() {
         date,
         name: desc.trim(),
         amount: type === "expense" ? amt : -amt,
-        category: type === "income" ? "Income" : category,
+        category: type === "income" ? "Income" : category || null,
       }),
     );
     setDesc("");
     setAmount("");
     setMsg(null);
+  }
+
+  async function resetAll() {
+    await db.transactions.clear();
+    setConfirmReset(false);
+    setMsg("Cleared all transactions.");
   }
 
   async function onCsv(e: ChangeEvent<HTMLInputElement>) {
@@ -150,6 +159,7 @@ export function AddTransactions() {
             onChange={(e) => setCategory(e.target.value)}
             disabled={type === "income"}
           >
+            <option value="">Auto-detect</option>
             {CATEGORIES.map((c) => (
               <option key={c} value={c}>
                 {c}
@@ -180,10 +190,41 @@ export function AddTransactions() {
         </Button>
         <span className="text-xs text-faint">
           Columns: date, description, amount{" "}
-          <span className="text-muted">(positive = expense)</span>, optional
-          category.
+          <span className="text-muted">(positive = expense)</span>. Category is
+          auto-detected from the merchant.
         </span>
-        {msg && <span className="text-xs text-info">{msg}</span>}
+        {msg && <span className="text-xs text-gain">{msg}</span>}
+
+        {/* Reset — clear all transactions so re-importing a statement can't duplicate */}
+        {confirmReset ? (
+          <div className="ml-auto flex items-center gap-2">
+            <span className="text-xs text-muted">
+              Delete all {txns.length} transaction{txns.length === 1 ? "" : "s"}?
+            </span>
+            <Button type="button" variant="danger" size="sm" onClick={resetAll}>
+              Confirm
+            </Button>
+            <Button
+              type="button"
+              variant="ghost"
+              size="sm"
+              onClick={() => setConfirmReset(false)}
+            >
+              Cancel
+            </Button>
+          </div>
+        ) : (
+          <Button
+            type="button"
+            variant="ghost"
+            size="sm"
+            onClick={() => setConfirmReset(true)}
+            disabled={txns.length === 0}
+            className="ml-auto text-loss hover:bg-loss/10 hover:text-loss"
+          >
+            <Trash2 size={15} /> Reset all
+          </Button>
+        )}
       </div>
     </div>
   );
