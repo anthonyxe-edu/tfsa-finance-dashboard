@@ -1,7 +1,12 @@
 import { createClient } from "@supabase/supabase-js";
 
-const url = process.env.NEXT_PUBLIC_SUPABASE_URL ?? "";
-const key = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY ?? "";
+// Public client values (safe to expose — they ship in the client bundle anyway;
+// RLS is what protects data). Env vars override for rotation/other environments.
+const url =
+  process.env.NEXT_PUBLIC_SUPABASE_URL ?? "https://sxtczkakmdmcakvlijng.supabase.co";
+const key =
+  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY ??
+  "sb_publishable_-YkdKNPFx1ml26gapb2cpg_kUesiKT0";
 
 /** Browser Supabase client. Session persists in localStorage; OTP login (no URL redirect). */
 export const supabase = createClient(url, key, {

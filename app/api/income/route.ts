@@ -63,9 +63,11 @@ export async function GET(req: NextRequest) {
 
   // Gmail income belongs to one mailbox (the owner). Only return it to that
   // account; everyone else falls back to their own manual income.
-  const owner = process.env.OWNER_EMAIL?.trim().toLowerCase();
+  const owner = (process.env.OWNER_EMAIL ?? "anthony.echeverry2005@gmail.com")
+    .trim()
+    .toLowerCase();
   const email = req.nextUrl.searchParams.get("email")?.trim().toLowerCase();
-  if (owner && email !== owner) {
+  if (email !== owner) {
     return NextResponse.json({ income: null, source: "not-owner" });
   }
 
