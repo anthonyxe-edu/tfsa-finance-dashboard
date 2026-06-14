@@ -1,14 +1,9 @@
 "use client";
 import { useEffect } from "react";
 import { db, KV_KEYS } from "@/lib/db";
-import {
-  useHoldings,
-  useGoals,
-  useRules,
-  useKV,
-  useTransactions,
-} from "@/hooks/useDb";
+import { useGoals, useRules, useKV, useTransactions } from "@/hooks/useDb";
 import { useQuotes } from "@/hooks/useQuotes";
+import { WATCHLIST } from "@/lib/watchlist";
 import { buildNotifications } from "@/lib/notify";
 import {
   DEFAULT_SETTINGS,
@@ -22,13 +17,12 @@ import {
  * firing a browser notification for fresh items when enabled.
  */
 export function NotificationsEngine() {
-  const holdings = useHoldings();
   const goals = useGoals();
   const rules = useRules();
   const transactions = useTransactions();
   const settings = useKV<Settings>(KV_KEYS.settings, DEFAULT_SETTINGS);
   const ctx = useKV<LifeContext>(KV_KEYS.lifeContext, DEFAULT_LIFE_CONTEXT);
-  const { quotes } = useQuotes(holdings.map((h) => h.ticker));
+  const { quotes } = useQuotes([...WATCHLIST]);
 
   useEffect(() => {
     const built = buildNotifications({

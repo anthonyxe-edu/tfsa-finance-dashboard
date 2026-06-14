@@ -1,5 +1,6 @@
 import type { Metadata, Viewport } from "next";
-import { Fira_Sans, Fira_Code, Permanent_Marker } from "next/font/google";
+import { Fira_Sans, Fira_Code } from "next/font/google";
+import localFont from "next/font/local";
 import "./globals.css";
 import { Sidebar } from "@/components/shell/Sidebar";
 import { Header } from "@/components/shell/Header";
@@ -19,11 +20,13 @@ const firaCode = Fira_Code({
   display: "swap",
 });
 
-// Playful marker-style display font for titles (GoodDog-like).
-const marker = Permanent_Marker({
-  subsets: ["latin"],
-  weight: "400",
-  variable: "--font-marker",
+// Alte Haas Grotesk — display font for headers, subheaders & titles.
+const alteHaas = localFont({
+  src: [
+    { path: "./fonts/AlteHaasGroteskRegular.ttf", weight: "400", style: "normal" },
+    { path: "./fonts/AlteHaasGroteskBold.ttf", weight: "700", style: "normal" },
+  ],
+  variable: "--font-alte",
   display: "swap",
 });
 
@@ -51,7 +54,7 @@ export default function RootLayout({
   return (
     <html
       lang="en"
-      className={`${firaSans.variable} ${firaCode.variable} ${marker.variable} h-full`}
+      className={`${firaSans.variable} ${firaCode.variable} ${alteHaas.variable} h-full`}
     >
       <body className="min-h-full">
         <Providers>

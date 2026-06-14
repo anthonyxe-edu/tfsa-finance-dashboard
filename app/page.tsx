@@ -1,13 +1,7 @@
 "use client";
 import Link from "next/link";
-import { PiggyBank, TrendingUp, TrendingDown, ArrowRight } from "lucide-react";
-import {
-  useHoldings,
-  useGoals,
-  useRules,
-  useTransactions,
-  useKV,
-} from "@/hooks/useDb";
+import { TrendingUp, TrendingDown, Flame, ArrowRight } from "lucide-react";
+import { useGoals, useRules, useTransactions, useKV } from "@/hooks/useDb";
 import { useQuotes } from "@/hooks/useQuotes";
 import { useIncome } from "@/hooks/useIncome";
 import { RadialOrbitalNav } from "@/components/home/RadialOrbitalNav";
@@ -15,17 +9,16 @@ import { NotificationCards } from "@/components/home/NotificationCards";
 import { StatTile } from "@/components/ui/StatTile";
 import { CashBalanceTile } from "@/components/overview/CashBalanceTile";
 import { MonthlyIncomeTile } from "@/components/overview/MonthlyIncomeTile";
-import { Money } from "@/components/ui/Money";
 import { Badge } from "@/components/ui/Badge";
 import { Card } from "@/components/ui/Card";
 import { AdviceList } from "@/components/lifecontext/AdviceList";
 import { monthSpendTotal } from "@/lib/analysis";
+import { WATCHLIST, marketSummary, displayTicker } from "@/lib/watchlist";
 import { currentMonth, fmtMonthLabel, fmtPct } from "@/lib/format";
 import { KV_KEYS } from "@/lib/db";
 
 export default function HomePage() {
-  const holdings = useHoldings();
-  const { quotes } = useQuotes(holdings.map((h) => h.ticker));
+  const { quotes } = useQuotes([...WATCHLIST]);
   const goals = useGoals();
   const rules = useRules();
   const txns = useTransactions();
@@ -35,16 +28,8 @@ export default function HomePage() {
   const income = useIncome(month, manualIncome);
   const spend = monthSpendTotal(txns, rules, month);
 
-  let tfsaValue = 0;
-  let prevValue = 0;
-  for (const h of holdings) {
-    const q = quotes[h.ticker];
-    const price = q?.price ?? 0;
-    tfsaValue += h.units * price;
-    prevValue += h.units * (q?.prevClose ?? price);
-  }
-  const dayChange = tfsaValue - prevValue;
-  const dayPct = prevValue ? (dayChange / prevValue) * 100 : 0;
+  const market = marketSummary(Object.values(quotes));
+  const upMarket = market.avgChange >= 0;
 
   const sourceLabel =
     income.source === "gmail"
@@ -70,28 +55,32 @@ export default function HomePage() {
         <CashBalanceTile />
         <MonthlyIncomeTile income={income} manual={manualIncome} />
         <StatTile
-          label="TFSA value"
-          value={<Money value={tfsaValue} />}
-          icon={<PiggyBank size={18} />}
+          label="Market today"
+          value={
+            <span className={upMarket ? "text-gain" : "text-loss"}>
+              {fmtPct(market.avgChange)}
+            </span>
+          }
+          icon={
+            upMarket ? <TrendingUp size={18} /> : <TrendingDown size={18} />
+          }
           sub={
             <span className="text-muted">
-              {holdings.length} holding{holdings.length === 1 ? "" : "s"}
+              {market.up} of {market.total || WATCHLIST.length} ETFs up
             </span>
           }
         />
         <StatTile
-          label="TFSA today"
-          value={<Money value={dayChange} colorBySign showSign />}
-          icon={
-            dayChange >= 0 ? <TrendingUp size={18} /> : <TrendingDown size={18} />
-          }
+          label="Top mover"
+          value={market.top ? displayTicker(market.top.ticker) : "—"}
+          icon={<Flame size={18} />}
           sub={
-            holdings.length ? (
-              <Badge variant={dayPct >= 0 ? "gain" : "loss"}>
-                {fmtPct(dayPct)}
+            market.top ? (
+              <Badge variant={market.top.dayChangePct >= 0 ? "gain" : "loss"}>
+                {fmtPct(market.top.dayChangePct)}
               </Badge>
             ) : (
-              <span className="text-faint">add holdings</span>
+              <span className="text-faint">loading…</span>
             )
           }
         />

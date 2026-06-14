@@ -24,7 +24,7 @@ type NavNode = {
 
 const NODES: NavNode[] = [
   { id: "spending", label: "Spending", href: "/spending", icon: Receipt, blurb: "Transactions, category breakdown & monthly trend." },
-  { id: "tfsa", label: "TFSA", href: "/tfsa", icon: PiggyBank, blurb: "Holdings, live ETF prices & contribution room." },
+  { id: "tfsa", label: "TFSA", href: "/tfsa", icon: PiggyBank, blurb: "Live ETF watchlist — up or down & good days to buy." },
   { id: "goals", label: "Goals", href: "/goals", icon: Target, blurb: "Savings targets, progress & monthly pace." },
   { id: "life", label: "Life", href: "/life-context", icon: HeartHandshake, blurb: "Partner, family, vacations & emergency buffer." },
   { id: "alerts", label: "Alerts", href: "/notifications", icon: Bell, blurb: "ETF booms, overspend & goal milestones." },
