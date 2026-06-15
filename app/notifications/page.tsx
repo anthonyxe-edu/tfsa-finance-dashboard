@@ -14,6 +14,7 @@ import { Card } from "@/components/ui/Card";
 import { Button } from "@/components/ui/Button";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { Field, Input } from "@/components/ui/Form";
+import { PushToggle } from "@/components/notifications/PushToggle";
 import { DEFAULT_SETTINGS, type Settings, type AppNotification } from "@/lib/types";
 
 const typeIcon: Record<AppNotification["type"], LucideIcon> = {
@@ -58,6 +59,8 @@ export default function NotificationsPage() {
 
   return (
     <div className="space-y-5">
+      <PushToggle />
+
       <Card title="Alert settings" subtitle="Thresholds that trigger notifications">
         <div className="grid gap-4 sm:grid-cols-2">
           <Field
