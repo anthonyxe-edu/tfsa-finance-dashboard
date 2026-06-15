@@ -104,7 +104,7 @@ export async function sendTestPush(): Promise<{ ok: boolean; error?: string }> {
       },
       body: JSON.stringify({
         title: "Finance",
-        body: "✅ Push notifications are working.",
+        body: "Push notifications are working.",
       }),
     });
     if (!res.ok) return { ok: false, error: `Server returned ${res.status}.` };
