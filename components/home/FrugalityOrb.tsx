@@ -1,5 +1,5 @@
 "use client";
-import { ParticleGlobe } from "./ParticleGlobe";
+import { GenerativeArtScene } from "@/components/ui/anomalous-matter-hero";
 
 // Tone hexes mirror the design tokens. Lime = frugal, amber = watch, red = over.
 const TONES = {
@@ -96,8 +96,8 @@ export function FrugalityOrb({
         }}
       />
 
-      {/* The energy mass itself. */}
-      <ParticleGlobe color={hex} intensity={intensity} sphereScale={0.66} />
+      {/* The energy mass itself — the original anomalous-matter blob, lime-tinted. */}
+      <GenerativeArtScene color={hex} intensity={intensity} />
     </div>
   );
 }
