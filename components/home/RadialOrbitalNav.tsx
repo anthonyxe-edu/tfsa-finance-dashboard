@@ -2,7 +2,6 @@
 import { useEffect, useRef, useState } from "react";
 import {
   Receipt,
-  PiggyBank,
   Target,
   Bell,
   ArrowRight,
@@ -24,9 +23,8 @@ type NavNode = {
 
 const NODES: NavNode[] = [
   { id: "spending", label: "Spending", href: "/spending", icon: Receipt, blurb: "Transactions, category breakdown & monthly trend." },
-  { id: "tfsa", label: "TFSA", href: "/tfsa", icon: PiggyBank, blurb: "Live ETF watchlist — up or down & good days to buy." },
   { id: "goals", label: "Goals", href: "/goals", icon: Target, blurb: "Goal planner, savings targets, life context & advice." },
-  { id: "alerts", label: "Alerts", href: "/notifications", icon: Bell, blurb: "ETF booms, overspend & goal milestones." },
+  { id: "alerts", label: "Alerts", href: "/notifications", icon: Bell, blurb: "Overspending, frugality nudges & goal milestones." },
 ];
 
 const RADIUS_PCT = 39;

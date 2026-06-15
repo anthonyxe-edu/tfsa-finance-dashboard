@@ -15,7 +15,7 @@ export function Sidebar() {
         </span>
         <span className="leading-tight">
           <span className="font-title block text-base tracking-wide">Finance</span>
-          <span className="block text-[11px] text-muted">TFSA &amp; Spending</span>
+          <span className="block text-[11px] text-muted">Spending &amp; Goals</span>
         </span>
       </Link>
 

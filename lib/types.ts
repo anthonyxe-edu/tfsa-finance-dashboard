@@ -20,14 +20,6 @@ export const CategoryRuleSchema = z.object({
 });
 export type CategoryRule = z.infer<typeof CategoryRuleSchema>;
 
-export const EtfHoldingSchema = z.object({
-  id: z.string(),
-  ticker: z.string().min(1), // e.g. "XEQT.TO"
-  units: z.number().nonnegative(),
-  bookCost: z.number().nonnegative(),
-});
-export type EtfHolding = z.infer<typeof EtfHoldingSchema>;
-
 export const GoalSchema = z.object({
   id: z.string(),
   name: z.string().min(1),
@@ -55,33 +47,15 @@ export const LifeContextSchema = z.object({
 });
 export type LifeContext = z.infer<typeof LifeContextSchema>;
 
-export const QuoteSchema = z.object({
-  ticker: z.string(),
-  price: z.number(),
-  prevClose: z.number(),
-  dayChangePct: z.number(),
-  history: z.array(z.number()),
-});
-export type Quote = z.infer<typeof QuoteSchema>;
-
-export const ContributionRoomSchema = z.object({
-  limit: z.number().nonnegative(),
-  used: z.number().nonnegative(),
-  year: z.number().int(),
-});
-export type ContributionRoom = z.infer<typeof ContributionRoomSchema>;
-
 export const SettingsSchema = z.object({
-  etfBoomPct: z.number().default(2),
-  etfLowPct: z.number().default(-2),
-  overspendRatio: z.number().default(1.15),
+  budgetWarnPct: z.number().default(85), // warn when month spend ≥ this % of income
+  overspendRatio: z.number().default(1.15), // per-category over baseline
   notifyBrowser: z.boolean().default(false),
 });
 export type Settings = z.infer<typeof SettingsSchema>;
 
 export const DEFAULT_SETTINGS: Settings = {
-  etfBoomPct: 2,
-  etfLowPct: -2,
+  budgetWarnPct: 85,
   overspendRatio: 1.15,
   notifyBrowser: false,
 };
@@ -96,7 +70,7 @@ export const DEFAULT_LIFE_CONTEXT: LifeContext = {
 
 export type AppNotification = {
   id: string;
-  type: "etf" | "spending" | "goal";
+  type: "spending" | "goal";
   message: string;
   ts: number;
   read: boolean;

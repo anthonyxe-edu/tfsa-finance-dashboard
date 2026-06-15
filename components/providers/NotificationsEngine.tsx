@@ -2,35 +2,30 @@
 import { useEffect } from "react";
 import { db, KV_KEYS } from "@/lib/db";
 import { useGoals, useRules, useKV, useTransactions } from "@/hooks/useDb";
-import { useQuotes } from "@/hooks/useQuotes";
-import { WATCHLIST } from "@/lib/watchlist";
+import { useIncome } from "@/hooks/useIncome";
 import { buildNotifications } from "@/lib/notify";
-import {
-  DEFAULT_SETTINGS,
-  DEFAULT_LIFE_CONTEXT,
-  type Settings,
-  type LifeContext,
-} from "@/lib/types";
+import { currentMonth } from "@/lib/format";
+import { DEFAULT_SETTINGS, type Settings } from "@/lib/types";
 
 /**
  * Headless component: watches data and persists any new notifications,
- * firing a browser notification for fresh items when enabled.
+ * firing a browser/push notification for fresh items when enabled.
  */
 export function NotificationsEngine() {
   const goals = useGoals();
   const rules = useRules();
   const transactions = useTransactions();
   const settings = useKV<Settings>(KV_KEYS.settings, DEFAULT_SETTINGS);
-  const ctx = useKV<LifeContext>(KV_KEYS.lifeContext, DEFAULT_LIFE_CONTEXT);
-  const { quotes } = useQuotes([...WATCHLIST]);
+  const manualIncome = useKV<number>(KV_KEYS.monthlyIncome, 0);
+  const month = currentMonth();
+  const income = useIncome(month, manualIncome);
 
   useEffect(() => {
     const built = buildNotifications({
-      quotes: Object.values(quotes),
       settings,
+      income: income.income,
       txns: transactions,
       rules,
-      ctx,
       goals,
     });
     if (built.length === 0) return;
@@ -54,7 +49,7 @@ export function NotificationsEngine() {
     return () => {
       cancelled = true;
     };
-  }, [quotes, settings, transactions, rules, ctx, goals]);
+  }, [settings, income.income, transactions, rules, goals]);
 
   return null;
 }

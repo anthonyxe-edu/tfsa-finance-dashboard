@@ -25,8 +25,7 @@ const ctx: LifeContext = {
   emergencyBufferTarget: 5000,
 };
 const settings: Settings = {
-  etfBoomPct: 2,
-  etfLowPct: -2,
+  budgetWarnPct: 85,
   overspendRatio: 1.15,
   notifyBrowser: false,
 };

@@ -32,7 +32,7 @@ const alteHaas = localFont({
 
 export const metadata: Metadata = {
   title: "Finance Dashboard",
-  description: "Personal TFSA & spending dashboard",
+  description: "Personal spending & budgeting dashboard",
   applicationName: "Finance",
   appleWebApp: {
     capable: true,

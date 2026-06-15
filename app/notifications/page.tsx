@@ -4,7 +4,6 @@ import {
   BellOff,
   Check,
   Trash2,
-  TrendingUp,
   Receipt,
   Target,
   type LucideIcon,
@@ -18,7 +17,6 @@ import { Field, Input } from "@/components/ui/Form";
 import { DEFAULT_SETTINGS, type Settings, type AppNotification } from "@/lib/types";
 
 const typeIcon: Record<AppNotification["type"], LucideIcon> = {
-  etf: TrendingUp,
   spending: Receipt,
   goal: Target,
 };
@@ -35,15 +33,13 @@ export default function NotificationsPage() {
   const notes = useNotifications();
   const settings = useKV<Settings>(KV_KEYS.settings, DEFAULT_SETTINGS);
 
-  const [boom, setBoom] = useState("");
-  const [low, setLow] = useState("");
+  const [warn, setWarn] = useState("");
   const [ratio, setRatio] = useState("");
 
   useEffect(() => {
-    setBoom(String(settings.etfBoomPct));
-    setLow(String(settings.etfLowPct));
+    setWarn(String(settings.budgetWarnPct));
     setRatio(String(Math.round((settings.overspendRatio - 1) * 100)));
-  }, [settings.etfBoomPct, settings.etfLowPct, settings.overspendRatio]);
+  }, [settings.budgetWarnPct, settings.overspendRatio]);
 
   async function save(next: Partial<Settings>) {
     await setKV(KV_KEYS.settings, { ...settings, ...next });
@@ -63,31 +59,25 @@ export default function NotificationsPage() {
   return (
     <div className="space-y-5">
       <Card title="Alert settings" subtitle="Thresholds that trigger notifications">
-        <div className="grid gap-4 sm:grid-cols-3">
-          <Field label="ETF booming at (%)" htmlFor="s-boom" hint="Day gain ≥ this">
+        <div className="grid gap-4 sm:grid-cols-2">
+          <Field
+            label="Budget warning (%)"
+            htmlFor="s-warn"
+            hint="Warn at this % of income spent"
+          >
             <Input
-              id="s-boom"
+              id="s-warn"
               type="number"
-              step="0.5"
-              value={boom}
-              onChange={(e) => setBoom(e.target.value)}
-              onBlur={() => save({ etfBoomPct: parseFloat(boom) || 2 })}
-            />
-          </Field>
-          <Field label="ETF low at (%)" htmlFor="s-low" hint="Day drop ≤ this">
-            <Input
-              id="s-low"
-              type="number"
-              step="0.5"
-              value={low}
-              onChange={(e) => setLow(e.target.value)}
-              onBlur={() => save({ etfLowPct: parseFloat(low) || -2 })}
+              step="5"
+              value={warn}
+              onChange={(e) => setWarn(e.target.value)}
+              onBlur={() => save({ budgetWarnPct: parseFloat(warn) || 85 })}
             />
           </Field>
           <Field
             label="Overspend alert (%)"
             htmlFor="s-ratio"
-            hint="Over baseline by this much"
+            hint="A category over its usual by this much"
           >
             <Input
               id="s-ratio"
@@ -145,7 +135,7 @@ export default function NotificationsPage() {
           <EmptyState
             icon={<BellOff size={20} />}
             title="No notifications yet"
-            description="Alerts about your ETFs, overspending in saving months, and goal milestones will show up here."
+            description="Alerts about overspending, frugality, and goal progress will show up here."
           />
         ) : (
           <ul className="divide-y divide-border/60">

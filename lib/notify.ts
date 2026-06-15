@@ -1,80 +1,95 @@
 import type {
-  Quote,
   Settings,
   Txn,
   CategoryRule,
-  LifeContext,
   Goal,
   AppNotification,
 } from "@/lib/types";
-import { classifyMove } from "@/lib/quotes";
-import { monthlyByCategory, baseline, isSavingMonth } from "@/lib/analysis";
-import { fmtPct, currentMonth } from "@/lib/format";
+import { monthlyByCategory, baseline, monthSpendTotal } from "@/lib/analysis";
+import { currentMonth } from "@/lib/format";
+
+const money = (n: number) => `$${Math.round(n).toLocaleString()}`;
 
 /**
- * Build the set of notifications that *should* exist given current data.
- * IDs are deterministic so the same condition is not re-notified
- * (ETF: per ticker/day/direction, spend: per month/category, goal: per goal/milestone).
+ * Build the notifications that *should* exist for the current data. IDs are
+ * deterministic so a condition is never re-notified. Focus (no more ETFs):
+ * overall budget burn, per-category overspend (frugality), goal-funding
+ * nudges, and goal milestones.
  */
 export function buildNotifications(args: {
-  quotes: Quote[];
   settings: Settings;
+  income: number;
   txns: Txn[];
   rules: CategoryRule[];
-  ctx: LifeContext;
   goals: Goal[];
 }): AppNotification[] {
-  const { quotes, settings, txns, rules, ctx, goals } = args;
-  const today = new Date().toISOString().slice(0, 10);
+  const { settings, income, txns, rules, goals } = args;
   const month = currentMonth();
   const now = Date.now();
   const out: AppNotification[] = [];
 
-  // ETF booming / low
-  for (const q of quotes) {
-    const move = classifyMove(
-      q.dayChangePct,
-      settings.etfBoomPct,
-      settings.etfLowPct,
-    );
-    if (move === "flat") continue;
-    // A "big" move (≥2× the threshold or ≥5%) is flagged urgent for the cards.
-    const big = Math.abs(q.dayChangePct) >= Math.max(5, 2 * settings.etfBoomPct);
-    out.push({
-      id: `etf-${q.ticker}-${today}-${move}`,
-      type: "etf",
-      message:
-        move === "boom"
-          ? `${q.ticker} is booming: ${fmtPct(q.dayChangePct)} today ($${q.price.toFixed(2)}).`
-          : `${q.ticker} is down: ${fmtPct(q.dayChangePct)} today ($${q.price.toFixed(2)}).`,
-      ts: now,
-      read: false,
-      severity: big ? "urgent" : "normal",
-    });
-  }
+  const spend = monthSpendTotal(txns, rules, month);
 
-  // Saving-month overspend per category
-  if (isSavingMonth(month, ctx)) {
-    const hist = monthlyByCategory(txns, rules);
-    const prior = Object.fromEntries(
-      Object.entries(hist).filter(([m]) => m < month),
-    );
-    const current = hist[month] ?? {};
-    for (const [cat, spent] of Object.entries(current)) {
-      const base = baseline(prior, cat);
-      if (base > 0 && spent > base * settings.overspendRatio) {
-        out.push({
-          id: `spend-${month}-${cat}`,
-          type: "spending",
-          message: `Saving month: ${cat} is over baseline ($${spent.toFixed(0)} vs $${base.toFixed(0)}).`,
-          ts: now,
-          read: false,
-        });
-      }
+  // 1) Overall budget burn — mirrors the orb.
+  if (income > 0) {
+    const pct = Math.round((spend / income) * 100);
+    if (spend >= income) {
+      out.push({
+        id: `budget-over-${month}`,
+        type: "spending",
+        message: `Over budget — you've spent ${money(spend)} of your ${money(income)} income this month (${pct}%). Pause non-essentials.`,
+        ts: now,
+        read: false,
+        severity: "urgent",
+      });
+    } else if (pct >= settings.budgetWarnPct) {
+      out.push({
+        id: `budget-warn-${month}`,
+        type: "spending",
+        message: `Heads up: ${pct}% of this month's income is spent. Ease off to stay frugal and protect your goals.`,
+        ts: now,
+        read: false,
+      });
     }
   }
 
-  // Goal milestones
+  // 2) Per-category overspend vs your usual baseline.
+  const hist = monthlyByCategory(txns, rules);
+  const prior = Object.fromEntries(
+    Object.entries(hist).filter(([m]) => m < month),
+  );
+  const current = hist[month] ?? {};
+  for (const [cat, spent] of Object.entries(current)) {
+    const base = baseline(prior, cat);
+    if (base > 0 && spent > base * settings.overspendRatio) {
+      out.push({
+        id: `spend-${month}-${cat}`,
+        type: "spending",
+        message: `Spending watch: ${cat} is above your usual (${money(spent)} vs ~${money(base)}).`,
+        ts: now,
+        read: false,
+      });
+    }
+  }
+
+  // 3) Goal-funding nudge — if there's money left this month, steer it to a goal.
+  const disposable = income > 0 ? income - spend : 0;
+  if (disposable > 50) {
+    const underfunded = goals
+      .filter((g) => g.target > 0 && g.saved < g.target)
+      .sort((a, b) => a.saved / a.target - b.saved / b.target)[0];
+    if (underfunded) {
+      out.push({
+        id: `goalfund-${month}-${underfunded.id}`,
+        type: "goal",
+        message: `You have about ${money(disposable)} left this month — putting some toward "${underfunded.name}" keeps you on pace.`,
+        ts: now,
+        read: false,
+      });
+    }
+  }
+
+  // 4) Goal milestones.
   for (const g of goals) {
     const pct = g.target > 0 ? (g.saved / g.target) * 100 : 0;
     for (const mile of [50, 75, 100]) {

@@ -1,7 +1,7 @@
 "use client";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { ArrowRight, Zap, TrendingUp, Wallet, Target, BellOff } from "lucide-react";
+import { ArrowRight, Zap, Wallet, Target, BellOff } from "lucide-react";
 import { useNotifications } from "@/hooks/useDb";
 import { DisplayCard } from "@/components/ui/display-cards";
 import { SwipeableCardDeck } from "@/components/ui/swipeable-card-deck";
@@ -19,15 +19,14 @@ function relTime(ts: number): string {
 
 function iconFor(n: AppNotification) {
   const size = 15;
-  if (n.type === "etf")
-    return n.severity === "urgent" ? <Zap size={size} /> : <TrendingUp size={size} />;
-  if (n.type === "spending") return <Wallet size={size} />;
+  if (n.type === "spending")
+    return n.severity === "urgent" ? <Zap size={size} /> : <Wallet size={size} />;
   return <Target size={size} />;
 }
 
 function titleFor(n: AppNotification): string {
-  if (n.type === "etf") return n.severity === "urgent" ? "Market alert" : "ETF update";
-  if (n.type === "spending") return "Spending watch";
+  if (n.type === "spending")
+    return n.severity === "urgent" ? "Budget alert" : "Spending watch";
   return "Goal progress";
 }
 
@@ -84,7 +83,7 @@ export function NotificationCards() {
           <BellOff size={22} className="text-faint" />
           <p className="text-sm text-muted">No alerts right now.</p>
           <p className="text-xs text-faint">
-            ETF booms, overspend, and goal milestones will appear here.
+            Overspend warnings and goal progress will appear here.
           </p>
         </div>
       )}

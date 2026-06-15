@@ -4,7 +4,7 @@ export default function manifest(): MetadataRoute.Manifest {
   return {
     name: "Finance Dashboard",
     short_name: "Finance",
-    description: "Personal TFSA & spending dashboard",
+    description: "Personal spending & budgeting dashboard",
     start_url: "/",
     display: "standalone",
     background_color: "#0c0d0a",

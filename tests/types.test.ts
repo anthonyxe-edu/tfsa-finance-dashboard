@@ -30,7 +30,7 @@ describe("types", () => {
 
   it("SettingsSchema applies defaults", () => {
     const s = SettingsSchema.parse({});
-    expect(s.etfBoomPct).toBe(2);
+    expect(s.budgetWarnPct).toBe(85);
     expect(s.overspendRatio).toBe(1.15);
   });
 });
