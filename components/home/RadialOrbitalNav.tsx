@@ -10,8 +10,9 @@ import {
   type LucideIcon,
 } from "lucide-react";
 import { cn } from "@/lib/cn";
+import { fmtCurrency0 } from "@/lib/format";
 import { useZoomNavigate } from "@/hooks/useZoomNavigate";
-import { FrugalityOrb } from "./FrugalityOrb";
+import { FrugalityOrb, burnStats } from "./FrugalityOrb";
 
 type NavNode = {
   id: string;
@@ -64,6 +65,7 @@ export function RadialOrbitalNav({
   }, [reduced, activeId]);
 
   const active = NODES.find((n) => n.id === activeId) ?? null;
+  const stats = burnStats(income, spend);
 
   return (
     <section className="flex flex-col items-center">
@@ -86,15 +88,9 @@ export function RadialOrbitalNav({
           style={{ width: `${RADIUS_PCT * 2}%`, height: `${RADIUS_PCT * 2}%` }}
         />
 
-        {/* center orb */}
+        {/* center orb — its size & color ARE the budget metric */}
         <div className="absolute inset-0 grid place-items-center">
-          <FrugalityOrb
-            income={income}
-            spend={spend}
-            sourceLabel={sourceLabel}
-            maxWidth="min(216px, 57%)"
-            compact
-          />
+          <FrugalityOrb income={income} spend={spend} maxWidth="min(248px, 64%)" />
         </div>
 
         {/* orbiting nav nodes */}
@@ -138,6 +134,37 @@ export function RadialOrbitalNav({
             </button>
           );
         })}
+      </div>
+
+      {/* budget readout — moved out from inside the orb */}
+      <div className="mt-3 flex flex-col items-center text-center leading-none">
+        {stats.hasIncome ? (
+          <>
+            <p className="font-title tnum text-4xl" style={{ color: stats.hex }}>
+              {stats.pct}
+              <span className="align-top text-xl">%</span>
+            </p>
+            <p className="mt-1.5 text-xs tracking-wider text-muted uppercase">
+              of income spent
+            </p>
+            <p className="mt-2 text-sm text-fg tnum">
+              {fmtCurrency0(spend)}{" "}
+              <span className="text-faint">/ {fmtCurrency0(income)}</span>
+            </p>
+            {sourceLabel && (
+              <p className="mt-1 text-[11px] tracking-wide text-faint uppercase">
+                {sourceLabel}
+              </p>
+            )}
+          </>
+        ) : (
+          <>
+            <p className="text-base font-semibold text-fg">Set your income</p>
+            <p className="mt-1 text-xs text-muted">
+              Add a monthly income below to power the orb.
+            </p>
+          </>
+        )}
       </div>
 
       {/* expanded detail panel */}

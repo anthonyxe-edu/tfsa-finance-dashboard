@@ -1,59 +1,73 @@
 "use client";
-import { useEffect, useState } from "react";
-import { fmtCurrency0 } from "@/lib/format";
 import { ParticleGlobe } from "./ParticleGlobe";
 
-// Tone hexes mirror the design tokens; passed to the canvas globe + used for the ring.
+// Tone hexes mirror the design tokens. Lime = frugal, amber = watch, red = over.
 const TONES = {
-  good: "#9dff3c", // neon lime (brand) — frugal / under budget
-  watch: "#f59e0b", // amber — near the line
-  over: "#f43f5e", // red — over budget
+  good: "#9dff3c", // neon lime (brand)
+  watch: "#f59e0b", // amber
+  over: "#f43f5e", // red
 } as const;
 
-const SIZE = 300;
-const R = 120;
-const C = 2 * Math.PI * R;
+export type BurnStats = {
+  hasIncome: boolean;
+  burn: number; // spend / income (can exceed 1)
+  frugality: number; // clamp(1 - burn, 0, 1)
+  hex: string; // continuous lime → amber → red
+  pct: number; // round(burn * 100)
+};
+
+const lerp = (a: number, b: number, t: number) => a + (b - a) * t;
+
+function hexToRgb(hex: string): [number, number, number] {
+  const n = parseInt(hex.replace("#", ""), 16);
+  return [(n >> 16) & 255, (n >> 8) & 255, n & 255];
+}
+function rgbToHex(r: number, g: number, b: number): string {
+  const c = (v: number) => Math.round(v).toString(16).padStart(2, "0");
+  return `#${c(r)}${c(g)}${c(b)}`;
+}
+
+/** Blend lime → amber → red as t goes 0 → 1 (keeps lime crisp, avoids muddy mid). */
+function toneHex(t: number): string {
+  const x = Math.max(0, Math.min(1, t));
+  const lime = hexToRgb(TONES.good);
+  const amber = hexToRgb(TONES.watch);
+  const red = hexToRgb(TONES.over);
+  const [from, to, k] =
+    x < 0.5 ? [lime, amber, x / 0.5] : [amber, red, (x - 0.5) / 0.5];
+  return rgbToHex(lerp(from[0], to[0], k), lerp(from[1], to[1], k), lerp(from[2], to[2], k));
+}
+
+/** Derive the orb's spending signal once, shared by the orb and the readout below it. */
+export function burnStats(income: number, spend: number): BurnStats {
+  const hasIncome = income > 0;
+  const burn = hasIncome ? spend / income : 0;
+  const frugality = Math.max(0, Math.min(1, 1 - burn));
+  // Stay lime until ~60% spent, then warm toward fully red by ~115%.
+  const warm = hasIncome ? (burn - 0.6) / 0.55 : 0;
+  return { hasIncome, burn, frugality, hex: hasIncome ? toneHex(warm) : TONES.good, pct: Math.round(burn * 100) };
+}
 
 /**
- * Budget-burn orb. A rotating neon point-cloud globe sits behind a thin ring
- * that fills with how much of this month's income has been spent. Frugality
- * (1 − burn) brightens the globe + outer glow; tone shifts lime → amber → red.
- * Size-agnostic via container-query (cqi) units (`maxWidth` + `compact` props).
+ * The orb IS the budget metric — no ring, no number inside. As this month's
+ * spending climbs it **shrinks** (big & bright when frugal → small dense ember
+ * when overspent) and **warms** from neon lime through amber to red. The %
+ * readout lives below it in the parent. Over budget adds an urgent pulse.
  */
 export function FrugalityOrb({
   income,
   spend,
-  sourceLabel,
-  maxWidth = "min(300px, 78vw)",
-  compact = false,
+  maxWidth = "min(248px, 64%)",
 }: {
   income: number;
   spend: number;
-  sourceLabel?: string;
   maxWidth?: string;
-  compact?: boolean;
 }) {
-  const hasIncome = income > 0;
-  const burn = hasIncome ? spend / income : 0;
-  const fill = Math.min(burn, 1);
-  const frugality = Math.max(0, Math.min(1, 1 - burn));
-
-  const toneKey = !hasIncome
-    ? "good"
-    : burn >= 1
-      ? "over"
-      : burn >= 0.85
-        ? "watch"
-        : "good";
-  const hex = TONES[toneKey];
-
-  // Animate the ring from empty → target on mount (smooth fill-in like the globe).
-  const [mounted, setMounted] = useState(false);
-  useEffect(() => {
-    const id = requestAnimationFrame(() => setMounted(true));
-    return () => cancelAnimationFrame(id);
-  }, []);
-  const dashoffset = mounted ? C * (1 - fill) : C;
+  const { hasIncome, burn, frugality, hex } = burnStats(income, spend);
+  // Big when frugal, contracts toward a small core the more you've spent.
+  const orbScale = hasIncome ? 0.55 + 0.45 * frugality : 1;
+  const over = hasIncome && burn >= 1;
+  const intensity = hasIncome ? 0.2 + 0.65 * frugality : 0.7;
 
   return (
     <div
@@ -62,6 +76,8 @@ export function FrugalityOrb({
         width: maxWidth,
         aspectRatio: "1 / 1",
         containerType: "inline-size",
+        transform: `scale(${orbScale})`,
+        transition: "transform 900ms cubic-bezier(0.22,1,0.36,1)",
       }}
       role="img"
       aria-label={
@@ -70,95 +86,18 @@ export function FrugalityOrb({
           : "Monthly income not set"
       }
     >
-      {/* Outer neon glow — brighter the more frugal */}
+      {/* Outer neon glow — brighter when frugal, fast urgent pulse when over budget. */}
       <div
-        className="absolute inset-[12%] rounded-full blur-2xl"
+        className="absolute inset-[10%] rounded-full blur-2xl"
         style={{
           background: `radial-gradient(circle, ${hex} 0%, transparent 70%)`,
-          opacity: 0.12 + frugality * 0.33,
-          animation: "orb-breathe 6s ease-in-out infinite",
+          opacity: 0.16 + frugality * 0.34,
+          animation: `orb-breathe ${over ? 2.2 : 6}s ease-in-out infinite`,
         }}
       />
 
-      {/* Rotating particle globe */}
-      <ParticleGlobe color={hex} intensity={frugality} sphereScale={0.62} />
-
-      {/* Soft dark vignette so the center readout stays legible over the dots */}
-      <div className="pointer-events-none absolute inset-0 grid place-items-center">
-        <div
-          className="h-[58%] w-[58%] rounded-full"
-          style={{
-            background:
-              "radial-gradient(circle, rgba(12,13,10,0.92) 36%, rgba(12,13,10,0.6) 60%, transparent 78%)",
-          }}
-        />
-      </div>
-
-      {/* Budget-burn ring */}
-      <svg viewBox={`0 0 ${SIZE} ${SIZE}`} className="relative h-full w-full">
-        <circle
-          cx={SIZE / 2}
-          cy={SIZE / 2}
-          r={R}
-          fill="none"
-          stroke="var(--color-border)"
-          strokeWidth={8}
-        />
-        <circle
-          cx={SIZE / 2}
-          cy={SIZE / 2}
-          r={R}
-          fill="none"
-          stroke={hex}
-          strokeWidth={8}
-          strokeLinecap="round"
-          strokeDasharray={C}
-          strokeDashoffset={dashoffset}
-          transform={`rotate(-90 ${SIZE / 2} ${SIZE / 2})`}
-          style={{
-            transition:
-              "stroke-dashoffset 1100ms cubic-bezier(0.22,1,0.36,1), stroke 400ms ease",
-            filter: `drop-shadow(0 0 6px ${hex})`,
-          }}
-        />
-      </svg>
-
-      {/* Center readout (cqi-scaled) */}
-      <div className="absolute inset-0 flex flex-col items-center justify-center text-center leading-none">
-        {hasIncome ? (
-          <>
-            <span className="font-bold tnum text-[18cqi]" style={{ color: hex }}>
-              {Math.round(burn * 100)}
-              <span className="align-top text-[8cqi]">%</span>
-            </span>
-            <span className="mt-[2cqi] text-[4cqi] tracking-wider text-muted uppercase">
-              of income spent
-            </span>
-            {!compact && (
-              <span className="mt-[3cqi] text-[4.8cqi] text-fg tnum">
-                {fmtCurrency0(spend)}{" "}
-                <span className="text-faint">/ {fmtCurrency0(income)}</span>
-              </span>
-            )}
-            {!compact && sourceLabel && (
-              <span className="mt-[1cqi] text-[3.2cqi] tracking-wide text-faint uppercase">
-                {sourceLabel}
-              </span>
-            )}
-          </>
-        ) : (
-          <>
-            <span className="text-[6.5cqi] font-semibold text-fg">
-              Set your income
-            </span>
-            {!compact && (
-              <span className="mt-[2cqi] max-w-[60cqi] text-[4cqi] text-muted">
-                Add a monthly income below to power the orb.
-              </span>
-            )}
-          </>
-        )}
-      </div>
+      {/* The energy mass itself. */}
+      <ParticleGlobe color={hex} intensity={intensity} sphereScale={0.66} />
     </div>
   );
 }
