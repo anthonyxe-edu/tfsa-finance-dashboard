@@ -1,6 +1,7 @@
 "use client";
+import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { LogOut } from "lucide-react";
+import { LogOut, Settings } from "lucide-react";
 import { activeLabel } from "./nav";
 import { NotificationBell } from "./NotificationBell";
 import { ZoomBack } from "./ZoomBack";
@@ -22,6 +23,15 @@ export function Header() {
         </div>
         <div className="flex items-center gap-2">
           <NotificationBell />
+          <Link
+            href="/settings"
+            aria-label="Settings"
+            className={`grid h-10 w-10 place-items-center rounded-lg border border-border bg-surface-2 transition-colors hover:bg-surface-hover hover:text-fg ${
+              pathname.startsWith("/settings") ? "text-primary" : "text-muted"
+            }`}
+          >
+            <Settings size={17} />
+          </Link>
           <button
             onClick={() => signOut()}
             aria-label="Sign out"

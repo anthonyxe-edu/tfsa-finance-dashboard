@@ -43,8 +43,10 @@ export function burnStats(income: number, spend: number): BurnStats {
   const hasIncome = income > 0;
   const burn = hasIncome ? spend / income : 0;
   const frugality = Math.max(0, Math.min(1, 1 - burn));
-  // Stay lime until ~60% spent, then warm toward fully red by ~115%.
-  const warm = hasIncome ? (burn - 0.6) / 0.55 : 0;
+  // Continuous lime → amber → red the more you spend. Eased (^1.6) so it stays
+  // comfortably lime in the safe zone, then accelerates into red as you near and
+  // pass 100% of income (the "red zone"). burn ≥ 1 is full red.
+  const warm = hasIncome ? Math.pow(Math.min(burn, 1), 1.6) : 0;
   return { hasIncome, burn, frugality, hex: hasIncome ? toneHex(warm) : TONES.good, pct: Math.round(burn * 100) };
 }
 

@@ -3,6 +3,7 @@ import {
   Receipt,
   Target,
   Bell,
+  Settings,
   type LucideIcon,
 } from "lucide-react";
 
@@ -13,6 +14,7 @@ export const NAV: NavItem[] = [
   { href: "/spending", label: "Spending", icon: Receipt },
   { href: "/goals", label: "Goals & Life", icon: Target },
   { href: "/notifications", label: "Notifications", icon: Bell },
+  { href: "/settings", label: "Settings", icon: Settings },
 ];
 
 export function activeLabel(pathname: string): string {

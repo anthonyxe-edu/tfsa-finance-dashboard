@@ -1,13 +1,11 @@
 "use client";
 import Link from "next/link";
-import { Receipt, PiggyBank, ArrowRight } from "lucide-react";
+import { Receipt, PiggyBank, Wallet, Banknote, ArrowRight } from "lucide-react";
 import { useRules, useTransactions, useKV } from "@/hooks/useDb";
 import { useIncome } from "@/hooks/useIncome";
 import { RadialOrbitalNav } from "@/components/home/RadialOrbitalNav";
 import { NotificationCards } from "@/components/home/NotificationCards";
 import { StatTile } from "@/components/ui/StatTile";
-import { CashBalanceTile } from "@/components/overview/CashBalanceTile";
-import { MonthlyIncomeTile } from "@/components/overview/MonthlyIncomeTile";
 import { Card } from "@/components/ui/Card";
 import { AdviceList } from "@/components/lifecontext/AdviceList";
 import { monthSpendTotal } from "@/lib/analysis";
@@ -18,6 +16,7 @@ export default function HomePage() {
   const rules = useRules();
   const txns = useTransactions();
   const manualIncome = useKV<number>(KV_KEYS.monthlyIncome, 0);
+  const balance = useKV<number>(KV_KEYS.checkingBalance, 0);
 
   const month = currentMonth();
   const income = useIncome(month, manualIncome);
@@ -45,8 +44,18 @@ export default function HomePage() {
 
       {/* Key stats */}
       <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
-        <CashBalanceTile />
-        <MonthlyIncomeTile income={income} manual={manualIncome} />
+        <StatTile
+          label="Chequing"
+          value={<span className="tnum">{fmtCurrency0(balance)}</span>}
+          icon={<Wallet size={18} />}
+          sub={<span className="text-faint">edit in Settings</span>}
+        />
+        <StatTile
+          label="Monthly income"
+          value={<span className="tnum">{fmtCurrency0(income.income)}</span>}
+          icon={<Banknote size={18} />}
+          sub={<span className="text-muted">{sourceLabel ?? "set in Settings"}</span>}
+        />
         <StatTile
           label="Spent this month"
           value={<span className="tnum">{fmtCurrency0(spend)}</span>}

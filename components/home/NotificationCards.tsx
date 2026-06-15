@@ -1,6 +1,5 @@
 "use client";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
 import { ArrowRight, Zap, Wallet, Target, BellOff } from "lucide-react";
 import { useNotifications } from "@/hooks/useDb";
 import { DisplayCard } from "@/components/ui/display-cards";
@@ -31,7 +30,6 @@ function titleFor(n: AppNotification): string {
 }
 
 export function NotificationCards() {
-  const router = useRouter();
   const notes = useNotifications();
 
   // Drop legacy/removed types (e.g. old "etf") so stale rows don't surface.
@@ -80,7 +78,7 @@ export function NotificationCards() {
       </div>
 
       {cards.length ? (
-        <SwipeableCardDeck items={cards} onTap={() => router.push("/notifications")} />
+        <SwipeableCardDeck items={cards} />
       ) : (
         <div className="flex flex-col items-center gap-2 rounded-card border border-dashed border-border bg-surface/50 py-10 text-center">
           <BellOff size={22} className="text-faint" />
