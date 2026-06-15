@@ -29,11 +29,21 @@ export function GenerativeArtScene({
     const mount = mountRef.current;
     if (!mount) return;
 
+    // Guard the whole WebGL setup: if a context can't be created (old/low-power
+    // device, lost context, iOS quirk) we degrade to no orb instead of throwing
+    // and taking the whole page down.
+    let renderer: THREE.WebGLRenderer;
+    try {
+      renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+    } catch (e) {
+      console.warn("Orb: WebGL unavailable, skipping render.", e);
+      return;
+    }
+
     const scene = new THREE.Scene();
     const camera = new THREE.PerspectiveCamera(75, 1, 0.1, 1000);
     camera.position.z = 3;
 
-    const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
     renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
     mount.appendChild(renderer.domElement);
 
