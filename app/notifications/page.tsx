@@ -15,7 +15,19 @@ import { Button } from "@/components/ui/Button";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { Field, Input } from "@/components/ui/Form";
 import { PushToggle } from "@/components/notifications/PushToggle";
-import { DEFAULT_SETTINGS, type Settings, type AppNotification } from "@/lib/types";
+import { cn } from "@/lib/cn";
+import {
+  DEFAULT_SETTINGS,
+  type Settings,
+  type Tone,
+  type AppNotification,
+} from "@/lib/types";
+
+const TONES: { id: Tone; label: string; hint: string }[] = [
+  { id: "hype", label: "Hype", hint: "Encouraging & upbeat" },
+  { id: "roast", label: "Roast", hint: "Sassy, calls you out" },
+  { id: "plain", label: "Plain", hint: "Just the facts" },
+];
 
 const typeIcon: Record<AppNotification["type"], LucideIcon> = {
   spending: Receipt,
@@ -98,7 +110,31 @@ export default function NotificationsPage() {
             />
           </Field>
         </div>
-        <label className="mt-4 flex cursor-pointer items-center gap-3 text-sm">
+        <div className="mt-5">
+          <p className="text-sm font-medium text-fg">Notification voice</p>
+          <p className="mb-2 text-xs text-muted">
+            How your nudges and the home one-liner talk to you.
+          </p>
+          <div className="flex flex-wrap gap-2">
+            {TONES.map((t) => (
+              <button
+                key={t.id}
+                onClick={() => save({ tone: t.id })}
+                className={cn(
+                  "rounded-lg border px-3 py-1.5 text-left transition-colors",
+                  settings.tone === t.id
+                    ? "border-primary bg-primary/15 text-primary"
+                    : "border-border text-muted hover:text-fg",
+                )}
+              >
+                <span className="block text-sm font-medium">{t.label}</span>
+                <span className="block text-[11px] opacity-80">{t.hint}</span>
+              </button>
+            ))}
+          </div>
+        </div>
+
+        <label className="mt-5 flex cursor-pointer items-center gap-3 text-sm">
           <input
             type="checkbox"
             checked={settings.notifyBrowser}

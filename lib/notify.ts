@@ -7,6 +7,7 @@ import type {
 } from "@/lib/types";
 import { monthlyByCategory, baseline, monthSpendTotal } from "@/lib/analysis";
 import { currentMonth } from "@/lib/format";
+import { overBudgetMsg, warnBudgetMsg } from "@/lib/tone";
 
 const money = (n: number) => `$${Math.round(n).toLocaleString()}`;
 
@@ -37,7 +38,7 @@ export function buildNotifications(args: {
       out.push({
         id: `budget-over-${month}`,
         type: "spending",
-        message: `Over budget — you've spent ${money(spend)} of your ${money(income)} income this month (${pct}%). Pause non-essentials.`,
+        message: overBudgetMsg(settings.tone, spend, income, pct),
         ts: now,
         read: false,
         severity: "urgent",
@@ -46,7 +47,7 @@ export function buildNotifications(args: {
       out.push({
         id: `budget-warn-${month}`,
         type: "spending",
-        message: `Heads up: ${pct}% of this month's income is spent. Ease off to stay frugal and protect your goals.`,
+        message: warnBudgetMsg(settings.tone, pct),
         ts: now,
         read: false,
       });

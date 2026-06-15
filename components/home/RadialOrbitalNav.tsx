@@ -11,6 +11,12 @@ import {
 import { cn } from "@/lib/cn";
 import { fmtCurrency0 } from "@/lib/format";
 import { useZoomNavigate } from "@/hooks/useZoomNavigate";
+import { useStreak } from "@/hooks/useStreak";
+import { useKV } from "@/hooks/useDb";
+import { KV_KEYS } from "@/lib/db";
+import { DEFAULT_SETTINGS, type Settings } from "@/lib/types";
+import { safeToSpendToday } from "@/lib/engagement";
+import { moneyMoment } from "@/lib/tone";
 import { FrugalityOrb, burnStats } from "./FrugalityOrb";
 
 type NavNode = {
@@ -64,6 +70,15 @@ export function RadialOrbitalNav({
 
   const active = NODES.find((n) => n.id === activeId) ?? null;
   const stats = burnStats(income, spend);
+  const settings = useKV<Settings>(KV_KEYS.settings, DEFAULT_SETTINGS);
+  const streak = useStreak();
+  const safe = safeToSpendToday(income, spend);
+  const moment = moneyMoment(settings.tone, {
+    hasIncome: stats.hasIncome,
+    safeToday: safe,
+    burnPct: stats.pct,
+    streak,
+  });
 
   return (
     <section className="flex flex-col items-center">
@@ -134,20 +149,27 @@ export function RadialOrbitalNav({
         })}
       </div>
 
-      {/* budget readout — moved out from inside the orb */}
-      <div className="mt-3 flex flex-col items-center text-center leading-none">
+      {/* budget readout — Safe-to-Spend is the daily hero number */}
+      <div className="mt-4 flex flex-col items-center text-center leading-none">
         {stats.hasIncome ? (
           <>
-            <p className="font-title tnum text-4xl" style={{ color: stats.hex }}>
-              {stats.pct}
-              <span className="align-top text-xl">%</span>
+            {streak > 1 && (
+              <span className="mb-2 inline-flex items-center gap-1 rounded-full border border-primary/30 bg-primary/10 px-3 py-1 text-xs font-medium text-primary">
+                🔥 {streak}-day streak
+              </span>
+            )}
+            <p className="text-[11px] tracking-wider text-muted uppercase">
+              safe to spend today
             </p>
-            <p className="mt-1.5 text-xs tracking-wider text-muted uppercase">
-              of income spent
+            <p
+              className="font-title tnum mt-1 text-5xl"
+              style={{ color: stats.hex }}
+            >
+              {fmtCurrency0(safe)}
             </p>
-            <p className="mt-2 text-sm text-fg tnum">
-              {fmtCurrency0(spend)}{" "}
-              <span className="text-faint">/ {fmtCurrency0(income)}</span>
+            <p className="mt-3 max-w-[34ch] text-sm text-fg">{moment}</p>
+            <p className="mt-2 text-xs tracking-wide text-muted tnum">
+              {stats.pct}% spent · {fmtCurrency0(spend)} / {fmtCurrency0(income)}
             </p>
             {sourceLabel && (
               <p className="mt-1 text-[11px] tracking-wide text-faint uppercase">
@@ -158,9 +180,7 @@ export function RadialOrbitalNav({
         ) : (
           <>
             <p className="text-base font-semibold text-fg">Set your income</p>
-            <p className="mt-1 text-xs text-muted">
-              Add a monthly income below to power the orb.
-            </p>
+            <p className="mt-1 max-w-[32ch] text-xs text-muted">{moment}</p>
           </>
         )}
       </div>

@@ -47,10 +47,14 @@ export const LifeContextSchema = z.object({
 });
 export type LifeContext = z.infer<typeof LifeContextSchema>;
 
+export const ToneSchema = z.enum(["hype", "roast", "plain"]);
+export type Tone = z.infer<typeof ToneSchema>;
+
 export const SettingsSchema = z.object({
   budgetWarnPct: z.number().default(85), // warn when month spend ≥ this % of income
   overspendRatio: z.number().default(1.15), // per-category over baseline
   notifyBrowser: z.boolean().default(false),
+  tone: ToneSchema.default("hype"), // voice for nudges & the home one-liner
 });
 export type Settings = z.infer<typeof SettingsSchema>;
 
@@ -58,6 +62,7 @@ export const DEFAULT_SETTINGS: Settings = {
   budgetWarnPct: 85,
   overspendRatio: 1.15,
   notifyBrowser: false,
+  tone: "hype",
 };
 
 export const DEFAULT_LIFE_CONTEXT: LifeContext = {

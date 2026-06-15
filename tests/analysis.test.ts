@@ -28,6 +28,7 @@ const settings: Settings = {
   budgetWarnPct: 85,
   overspendRatio: 1.15,
   notifyBrowser: false,
+  tone: "hype",
 };
 
 describe("analysis", () => {
