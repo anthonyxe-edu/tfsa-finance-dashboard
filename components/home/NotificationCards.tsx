@@ -34,8 +34,11 @@ export function NotificationCards() {
   const router = useRouter();
   const notes = useNotifications();
 
+  // Drop legacy/removed types (e.g. old "etf") so stale rows don't surface.
+  const visible = notes.filter((n) => n.type === "spending" || n.type === "goal");
+
   // Urgent first, then most recent.
-  const sorted = [...notes].sort((a, b) => {
+  const sorted = [...visible].sort((a, b) => {
     const au = a.severity === "urgent" ? 1 : 0;
     const bu = b.severity === "urgent" ? 1 : 0;
     if (au !== bu) return bu - au;
@@ -63,8 +66,8 @@ export function NotificationCards() {
             Notifications
           </h2>
           <p className="text-xs text-muted">
-            {notes.length
-              ? `Swipe to see more${notes.length > 6 ? ` · ${notes.length} total` : ""}`
+            {visible.length
+              ? `Swipe to see more${visible.length > 6 ? ` · ${visible.length} total` : ""}`
               : "Outstanding alerts"}
           </p>
         </div>

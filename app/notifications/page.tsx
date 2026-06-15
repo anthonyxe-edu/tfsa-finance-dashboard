@@ -31,7 +31,11 @@ function timeAgo(ts: number): string {
 }
 
 export default function NotificationsPage() {
-  const notes = useNotifications();
+  // Hide legacy/removed notification types (e.g. old "etf") so stale rows neither
+  // crash the page nor clutter the list.
+  const notes = useNotifications().filter(
+    (n) => n.type === "spending" || n.type === "goal",
+  );
   const settings = useKV<Settings>(KV_KEYS.settings, DEFAULT_SETTINGS);
 
   const [warn, setWarn] = useState("");
@@ -143,7 +147,9 @@ export default function NotificationsPage() {
         ) : (
           <ul className="divide-y divide-border/60">
             {notes.map((n) => {
-              const Icon = typeIcon[n.type];
+              // Fallback guards against legacy/unknown types (e.g. removed "etf")
+              // so a stale row can never render `undefined` and crash the page.
+              const Icon = typeIcon[n.type] ?? BellOff;
               return (
                 <li
                   key={n.id}
