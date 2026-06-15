@@ -48,7 +48,7 @@ export function Login() {
           <p className="mt-1 text-sm text-muted">
             {step === "email"
               ? "Sign in with your email to sync across your devices."
-              : `Enter the 6-digit code we sent to ${email}.`}
+              : `Enter the code we sent to ${email}.`}
           </p>
         </div>
 
@@ -81,11 +81,11 @@ export function Login() {
               autoFocus
               inputMode="numeric"
               autoComplete="one-time-code"
-              maxLength={6}
+              maxLength={10}
               value={code}
               onChange={(e) => setCode(e.target.value.replace(/\D/g, ""))}
-              placeholder="123456"
-              className="h-12 w-full rounded-lg border border-border bg-surface-2 px-4 text-center text-2xl tracking-[0.4em] text-fg placeholder:text-faint placeholder:tracking-normal focus:border-primary focus:outline-none tnum"
+              placeholder="Code"
+              className="h-12 w-full rounded-lg border border-border bg-surface-2 px-4 text-center text-xl tracking-[0.3em] text-fg placeholder:text-faint placeholder:tracking-normal focus:border-primary focus:outline-none tnum"
             />
             <button
               type="submit"
