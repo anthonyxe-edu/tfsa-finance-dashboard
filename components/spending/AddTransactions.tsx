@@ -3,7 +3,7 @@ import { useRef, useState, type ChangeEvent, type FormEvent } from "react";
 import { Plus, Upload, Trash2 } from "lucide-react";
 import { db } from "@/lib/db";
 import { uid } from "@/lib/format";
-import { parseCsv, normalizeDate, isBankSignConvention } from "@/lib/csv";
+import { parseCsv, normalizeDate, isBankSignConvention, txnFingerprint } from "@/lib/csv";
 import { detectMerchantCategory } from "@/lib/merchants";
 import { Button } from "@/components/ui/Button";
 import { Field, Input, Select } from "@/components/ui/Form";
@@ -82,7 +82,13 @@ export function AddTransactions() {
     }
     const header = rows[0].map((h) => h.trim().toLowerCase());
     const di = header.findIndex((h) => h.includes("date"));
-    const ai = header.findIndex((h) => h.includes("amount"));
+    const ai = header.findIndex(
+      (h) =>
+        h.includes("amount") ||
+        h.includes("cad") || // RBC exports the amount as "CAD$"
+        h.includes("value") ||
+        h.endsWith("$"),
+    );
     const ni = header.findIndex(
       (h) =>
         h.includes("desc") ||
@@ -150,9 +156,32 @@ export function AddTransactions() {
       if (bankFormat) note = " · detected bank format (negatives = expenses)";
     }
 
-    await db.transactions.bulkAdd(txnsToAdd);
+    // Auto-dedupe: skip rows already present (and repeats within this file), so a
+    // statement can be re-imported safely without creating duplicates.
+    const seen = new Set(txns.map((t) => txnFingerprint(t.date, t.amount, t.name)));
+    const fresh: Txn[] = [];
+    let dupes = 0;
+    for (const t of txnsToAdd) {
+      const key = txnFingerprint(t.date, t.amount, t.name);
+      if (seen.has(key)) {
+        dupes++;
+        continue;
+      }
+      seen.add(key);
+      fresh.push(t);
+    }
+
+    if (fresh.length === 0) {
+      setMsg(`Already up to date — all ${txnsToAdd.length} rows were imported before.`);
+      e.target.value = "";
+      return;
+    }
+
+    await db.transactions.bulkAdd(fresh);
+    const dupNote =
+      dupes > 0 ? ` · skipped ${dupes} duplicate${dupes === 1 ? "" : "s"}` : "";
     setMsg(
-      `Imported ${txnsToAdd.length} transaction${txnsToAdd.length === 1 ? "" : "s"}${note}.`,
+      `Imported ${fresh.length} new transaction${fresh.length === 1 ? "" : "s"}${note}${dupNote}.`,
     );
     e.target.value = "";
   }
@@ -238,8 +267,8 @@ export function AddTransactions() {
           <Upload size={15} /> Import CSV
         </Button>
         <span className="text-xs text-faint">
-          Columns: date, description, amount (or debit/credit). Sign is
-          auto-detected; category is auto-detected from the merchant.
+          Columns auto-detected (date, description, amount or debit/credit); sign
+          &amp; category too. Safe to re-import — duplicates are skipped.
         </span>
         {msg && <span className="text-xs text-gain">{msg}</span>}
 

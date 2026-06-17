@@ -56,6 +56,16 @@ export function isBankSignConvention(amounts: number[]): boolean {
   return neg > pos;
 }
 
+/**
+ * Stable identity for de-duping imports: same date + amount + name = same txn.
+ * Amount is rounded to cents and the name lower-cased/trimmed so trivial
+ * differences don't slip a duplicate through. Lets a statement be re-imported
+ * safely — already-present rows are skipped.
+ */
+export function txnFingerprint(date: string, amount: number, name: string): string {
+  return `${date}|${Math.round(amount * 100)}|${name.trim().toLowerCase()}`;
+}
+
 /** Normalize common date formats to ISO yyyy-mm-dd. Returns null if unparseable. */
 export function normalizeDate(input: string): string | null {
   const s = input.trim();
