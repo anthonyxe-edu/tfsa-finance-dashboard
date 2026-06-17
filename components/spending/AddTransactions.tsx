@@ -3,7 +3,13 @@ import { useRef, useState, type ChangeEvent, type FormEvent } from "react";
 import { Plus, Upload, Trash2 } from "lucide-react";
 import { db } from "@/lib/db";
 import { uid } from "@/lib/format";
-import { parseCsv, normalizeDate, isBankSignConvention, txnFingerprint } from "@/lib/csv";
+import {
+  parseCsv,
+  normalizeDate,
+  isBankSignConvention,
+  txnFingerprint,
+  dedupeNew,
+} from "@/lib/csv";
 import { detectMerchantCategory } from "@/lib/merchants";
 import { Button } from "@/components/ui/Button";
 import { Field, Input, Select } from "@/components/ui/Form";
@@ -156,20 +162,12 @@ export function AddTransactions() {
       if (bankFormat) note = " · detected bank format (negatives = expenses)";
     }
 
-    // Auto-dedupe: skip rows already present (and repeats within this file), so a
-    // statement can be re-imported safely without creating duplicates.
-    const seen = new Set(txns.map((t) => txnFingerprint(t.date, t.amount, t.name)));
-    const fresh: Txn[] = [];
-    let dupes = 0;
-    for (const t of txnsToAdd) {
-      const key = txnFingerprint(t.date, t.amount, t.name);
-      if (seen.has(key)) {
-        dupes++;
-        continue;
-      }
-      seen.add(key);
-      fresh.push(t);
-    }
+    // Auto-dedupe (count-based): only skip an incoming row when it matches a copy
+    // already stored. Recurring charges on new dates and genuine same-day repeats
+    // are kept; only a true re-import of already-saved rows is dropped.
+    const key = (t: Txn) => txnFingerprint(t.date, t.amount, t.name);
+    const fresh = dedupeNew(txns.map(key), txnsToAdd, key);
+    const dupes = txnsToAdd.length - fresh.length;
 
     if (fresh.length === 0) {
       setMsg(`Already up to date — all ${txnsToAdd.length} rows were imported before.`);

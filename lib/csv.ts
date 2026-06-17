@@ -66,6 +66,34 @@ export function txnFingerprint(date: string, amount: number, name: string): stri
   return `${date}|${Math.round(amount * 100)}|${name.trim().toLowerCase()}`;
 }
 
+/**
+ * Multiset de-dupe for imports. Keeps every incoming item EXCEPT those that
+ * match a copy already stored (by fingerprint). Because it counts copies rather
+ * than just presence, genuinely repeated transactions are preserved — two
+ * identical same-day purchases both import, and a recurring charge on a new date
+ * always imports (different date = different key). Only a true re-import of an
+ * already-stored row is dropped. Returns the items to actually add.
+ */
+export function dedupeNew<T>(
+  existingKeys: string[],
+  incoming: T[],
+  keyOf: (item: T) => string,
+): T[] {
+  const remaining = new Map<string, number>();
+  for (const k of existingKeys) remaining.set(k, (remaining.get(k) ?? 0) + 1);
+  const fresh: T[] = [];
+  for (const item of incoming) {
+    const k = keyOf(item);
+    const c = remaining.get(k) ?? 0;
+    if (c > 0) {
+      remaining.set(k, c - 1); // this incoming row matches an existing copy → skip
+      continue;
+    }
+    fresh.push(item);
+  }
+  return fresh;
+}
+
 /** Normalize common date formats to ISO yyyy-mm-dd. Returns null if unparseable. */
 export function normalizeDate(input: string): string | null {
   const s = input.trim();
