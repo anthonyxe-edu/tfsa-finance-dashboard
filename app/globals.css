@@ -150,6 +150,80 @@
   transform-origin: center 38%;
 }
 
+/* Boot/load-in splash: the orb ignites, then the screen zooms into it. */
+@keyframes boot-ignite {
+  0% {
+    transform: scale(0.2);
+    opacity: 0;
+    filter: brightness(0.4);
+  }
+  60% {
+    opacity: 1;
+  }
+  100% {
+    transform: scale(1);
+    opacity: 1;
+    filter: brightness(1);
+  }
+}
+@keyframes boot-title-in {
+  0%,
+  35% {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  100% {
+    opacity: 1;
+    transform: none;
+  }
+}
+@keyframes boot-zoom-out {
+  from {
+    opacity: 1;
+    transform: scale(1);
+  }
+  to {
+    opacity: 0;
+    transform: scale(2.6);
+  }
+}
+.boot-splash {
+  position: fixed;
+  inset: 0;
+  z-index: 60;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 1.25rem;
+  background: var(--color-canvas);
+  transform-origin: center 46%;
+}
+.boot-orb {
+  width: 132px;
+  height: 132px;
+  border-radius: 9999px;
+  background: radial-gradient(
+    circle at 50% 45%,
+    var(--color-primary) 0%,
+    rgba(157, 255, 60, 0.34) 40%,
+    transparent 70%
+  );
+  box-shadow: 0 0 64px 10px rgba(157, 255, 60, 0.22);
+  animation:
+    boot-ignite 900ms cubic-bezier(0.22, 1, 0.36, 1) both,
+    orb-breathe 2.6s ease-in-out 900ms infinite;
+}
+.boot-title {
+  font-size: 1.75rem;
+  letter-spacing: 0.02em;
+  color: var(--color-fg);
+  animation: boot-title-in 1000ms ease both;
+}
+.boot-out {
+  animation: boot-zoom-out 600ms cubic-bezier(0.5, 0, 0.75, 0) forwards;
+}
+
 @media (prefers-reduced-motion: reduce) {
   *,
   *::before,

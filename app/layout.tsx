@@ -5,6 +5,7 @@ import "./globals.css";
 import { Sidebar } from "@/components/shell/Sidebar";
 import { Header } from "@/components/shell/Header";
 import { Providers } from "@/components/providers/Providers";
+import { BootSplash } from "@/components/shell/BootSplash";
 
 const firaSans = Fira_Sans({
   subsets: ["latin"],
@@ -68,6 +69,7 @@ export default function RootLayout({
             </div>
           </div>
         </Providers>
+        <BootSplash />
       </body>
     </html>
   );
