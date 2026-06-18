@@ -1,6 +1,8 @@
 "use client";
 import { useRef, useState, type ChangeEvent, type FormEvent } from "react";
-import { Plus, Upload, Trash2 } from "lucide-react";
+import { Plus, Upload, Trash2, Mail, Loader2 } from "lucide-react";
+import { useAuth } from "@/components/auth/AuthProvider";
+import { syncRbcPurchases } from "@/lib/rbcSync";
 import { db } from "@/lib/db";
 import { uid } from "@/lib/format";
 import {
@@ -51,8 +53,25 @@ export function AddTransactions() {
   const [category, setCategory] = useState(""); // "" = auto-detect from merchant
   const [msg, setMsg] = useState<string | null>(null);
   const [confirmReset, setConfirmReset] = useState(false);
+  const [syncing, setSyncing] = useState(false);
   const fileRef = useRef<HTMLInputElement>(null);
   const txns = useTransactions();
+  const { user } = useAuth();
+
+  async function syncEmail() {
+    if (!user?.email) return;
+    setSyncing(true);
+    setMsg(null);
+    const r = await syncRbcPurchases(user.email, txns);
+    setSyncing(false);
+    setMsg(
+      r.error
+        ? `Email sync failed: ${r.error}`
+        : r.added > 0
+          ? `Synced ${r.added} new purchase${r.added === 1 ? "" : "s"} from email.`
+          : "No new email purchases to import.",
+    );
+  }
 
   async function add(e: FormEvent) {
     e.preventDefault();
@@ -263,6 +282,16 @@ export function AddTransactions() {
           onClick={() => fileRef.current?.click()}
         >
           <Upload size={15} /> Import CSV
+        </Button>
+        <Button
+          type="button"
+          variant="secondary"
+          size="sm"
+          onClick={syncEmail}
+          disabled={syncing}
+        >
+          {syncing ? <Loader2 className="animate-spin" size={15} /> : <Mail size={15} />}{" "}
+          Sync from email
         </Button>
         <span className="text-xs text-faint">
           Columns auto-detected (date, description, amount or debit/credit); sign

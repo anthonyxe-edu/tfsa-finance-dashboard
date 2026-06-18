@@ -9,6 +9,7 @@ export const KV_KEYS = {
   checkingBalance: "checkingBalance",
   monthlyIncome: "monthlyIncome",
   streak: "streak",
+  rbcImportedIds: "rbcImportedIds",
 } as const;
 
 const txnRow = (t: Txn, userId: string) => ({
