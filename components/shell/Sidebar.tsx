@@ -48,7 +48,7 @@ export function Sidebar() {
         })}
       </nav>
 
-      <div className="px-3 pt-3 text-[11px] text-faint">Local · Sandbox</div>
+      <div className="px-3 pt-3 text-[11px] text-faint">Cloud-synced</div>
     </aside>
   );
 }
