@@ -7,7 +7,8 @@ import type {
 } from "@/lib/types";
 import { monthlyByCategory, baseline, monthSpendTotal } from "@/lib/analysis";
 import { currentMonth } from "@/lib/format";
-import { overBudgetMsg, warnBudgetMsg } from "@/lib/tone";
+import { safeToSpendToday, daysLeftInMonth } from "@/lib/engagement";
+import { overBudgetMsg, warnBudgetMsg, bigDayMsg } from "@/lib/tone";
 
 const money = (n: number) => `$${Math.round(n).toLocaleString()}`;
 
@@ -51,6 +52,37 @@ export function buildNotifications(args: {
         ts: now,
         read: false,
       });
+    }
+  }
+
+  // 1b) Big single-day spend → rebalancing nudge. A day is "big" when it's
+  // ≥ 2× the even daily budget (and ≥ $60). The guidance shows the rebalanced
+  // safe-to-spend, which self-corrects: $0 days raise it, heavy days lower it.
+  if (income > 0) {
+    const [yy, mm] = month.split("-").map(Number);
+    const daysInMonth = new Date(yy, mm, 0).getDate();
+    const bigThreshold = Math.max(60, (income / daysInMonth) * 2);
+    const today = new Date().toISOString().slice(0, 10);
+    const cutoff = new Date(Date.now() - 3 * 86400000).toISOString().slice(0, 10);
+    const byDay: Record<string, number> = {};
+    for (const t of txns) {
+      if (t.amount > 0 && t.date >= `${month}-01` && t.date <= today) {
+        byDay[t.date] = (byDay[t.date] ?? 0) + t.amount;
+      }
+    }
+    const safeDaily = safeToSpendToday(income, spend);
+    const daysLeft = daysLeftInMonth();
+    for (const [d, total] of Object.entries(byDay)) {
+      if (total >= bigThreshold && d >= cutoff) {
+        out.push({
+          id: `bigday-${d}`,
+          type: "spending",
+          message: bigDayMsg(settings.tone, total, safeDaily, daysLeft),
+          ts: now,
+          read: false,
+          severity: "urgent",
+        });
+      }
     }
   }
 

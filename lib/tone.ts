@@ -58,6 +58,20 @@ export function overBudgetMsg(
       : `Over budget — you've spent ${money(spent)} of your ${money(income)} income this month (${pct}%). Pause non-essentials.`;
 }
 
+/** Fires after a heavy single-day spend; shows the rebalanced daily allowance. */
+export function bigDayMsg(
+  tone: Tone,
+  daySpend: number,
+  safeDaily: number,
+  daysLeft: number,
+): string {
+  return tone === "roast"
+    ? `${money(daySpend)} in one day? Oof. That leaves ~${money(safeDaily)}/day for the last ${daysLeft} days — keep it cheap to recover.`
+    : tone === "hype"
+      ? `Big ${money(daySpend)} day — no panic. Hold ~${money(safeDaily)}/day over the last ${daysLeft} days and you're balanced out.`
+      : `You spent ${money(daySpend)} in a day. To stay on budget, aim for ~${money(safeDaily)}/day across the last ${daysLeft} days.`;
+}
+
 export function warnBudgetMsg(tone: Tone, pct: number): string {
   return tone === "roast"
     ? `${pct}% spent already. Maybe slow down before the orb turns red.`

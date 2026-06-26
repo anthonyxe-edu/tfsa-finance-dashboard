@@ -1,15 +1,6 @@
 "use client";
 import { useEffect, useRef, useState } from "react";
-import {
-  Receipt,
-  Target,
-  Bell,
-  ArrowRight,
-  X,
-  Flame,
-  type LucideIcon,
-} from "lucide-react";
-import { cn } from "@/lib/cn";
+import { Receipt, Target, Bell, Flame, type LucideIcon } from "lucide-react";
 import { fmtCurrency0 } from "@/lib/format";
 import { useZoomNavigate } from "@/hooks/useZoomNavigate";
 import { useStreak } from "@/hooks/useStreak";
@@ -48,7 +39,6 @@ export function RadialOrbitalNav({
   caption?: string;
 }) {
   const [rotation, setRotation] = useState(0);
-  const [activeId, setActiveId] = useState<string | null>(null);
   const [reduced, setReduced] = useState(false);
   const pausedRef = useRef(false);
   const zoomNavigate = useZoomNavigate();
@@ -62,14 +52,13 @@ export function RadialOrbitalNav({
   }, []);
 
   useEffect(() => {
-    if (reduced || activeId) return;
+    if (reduced) return;
     const id = setInterval(() => {
       if (!pausedRef.current) setRotation((r) => (r + 0.18) % 360);
     }, 40);
     return () => clearInterval(id);
-  }, [reduced, activeId]);
+  }, [reduced]);
 
-  const active = NODES.find((n) => n.id === activeId) ?? null;
   const stats = burnStats(income, spend);
   const settings = useKV<Settings>(KV_KEYS.settings, DEFAULT_SETTINGS);
   const streak = useStreak();
@@ -114,35 +103,18 @@ export function RadialOrbitalNav({
           const left = 50 + RADIUS_PCT * Math.cos(angle);
           const top = 50 + RADIUS_PCT * Math.sin(angle);
           const Icon = node.icon;
-          const isActive = activeId === node.id;
-          const dim = Boolean(activeId) && !isActive;
           return (
             <button
               key={node.id}
-              onClick={() => setActiveId(isActive ? null : node.id)}
+              onClick={() => zoomNavigate(node.href, "in")}
               className="absolute z-10 flex flex-col items-center gap-1 focus:outline-none"
               style={{ left: `${left}%`, top: `${top}%`, transform: "translate(-50%,-50%)" }}
-              aria-label={`${node.label} — tap for details`}
-              aria-expanded={isActive}
+              aria-label={`Open ${node.label}`}
             >
-              <span
-                className={cn(
-                  "grid h-11 w-11 place-items-center rounded-full border transition-all duration-300",
-                  isActive
-                    ? "scale-110 border-primary bg-primary text-on-primary shadow-[0_0_18px_var(--color-primary)]"
-                    : "border-border-strong bg-surface-2 text-muted",
-                  dim && "opacity-40",
-                )}
-              >
+              <span className="grid h-11 w-11 place-items-center rounded-full border border-border-strong bg-surface-2 text-muted transition-all duration-200 hover:border-primary hover:text-fg active:scale-95">
                 <Icon size={18} />
               </span>
-              <span
-                className={cn(
-                  "text-[11px] font-medium transition-colors",
-                  isActive ? "text-fg" : "text-muted",
-                  dim && "opacity-40",
-                )}
-              >
+              <span className="text-[11px] font-medium text-muted">
                 {node.label}
               </span>
             </button>
@@ -223,39 +195,6 @@ export function RadialOrbitalNav({
           </>
         )}
       </div>
-
-      {/* expanded detail panel */}
-      {active && (
-        <div
-          className="mt-4 w-full max-w-sm rounded-card border border-border bg-surface p-4"
-          style={{ animation: "panel-in 240ms ease" }}
-        >
-          <div className="flex items-start justify-between gap-3">
-            <div className="flex items-center gap-3">
-              <span className="grid h-10 w-10 place-items-center rounded-full bg-primary/15 text-primary">
-                <active.icon size={18} />
-              </span>
-              <div>
-                <p className="text-sm font-semibold text-fg">{active.label}</p>
-                <p className="text-xs text-muted">{active.blurb}</p>
-              </div>
-            </div>
-            <button
-              onClick={() => setActiveId(null)}
-              aria-label="Close"
-              className="text-faint transition-colors hover:text-fg"
-            >
-              <X size={16} />
-            </button>
-          </div>
-          <button
-            onClick={() => zoomNavigate(active.href, "in")}
-            className="mt-4 flex h-11 w-full items-center justify-center gap-1.5 rounded-lg bg-primary text-sm font-semibold text-on-primary transition-colors hover:bg-primary-strong"
-          >
-            Open {active.label} <ArrowRight size={15} />
-          </button>
-        </div>
-      )}
     </section>
   );
 }
