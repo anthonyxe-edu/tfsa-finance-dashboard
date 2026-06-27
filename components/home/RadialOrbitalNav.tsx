@@ -39,6 +39,7 @@ export function RadialOrbitalNav({
   caption?: string;
 }) {
   const [rotation, setRotation] = useState(0);
+  const [activeId, setActiveId] = useState<string | null>(null);
   const [reduced, setReduced] = useState(false);
   const pausedRef = useRef(false);
   const zoomNavigate = useZoomNavigate();
@@ -54,10 +55,10 @@ export function RadialOrbitalNav({
   useEffect(() => {
     if (reduced) return;
     const id = setInterval(() => {
-      if (!pausedRef.current) setRotation((r) => (r + 0.18) % 360);
+      if (!pausedRef.current && !activeId) setRotation((r) => (r + 0.18) % 360);
     }, 40);
     return () => clearInterval(id);
-  }, [reduced]);
+  }, [reduced, activeId]);
 
   const stats = burnStats(income, spend);
   const settings = useKV<Settings>(KV_KEYS.settings, DEFAULT_SETTINGS);
@@ -103,18 +104,32 @@ export function RadialOrbitalNav({
           const left = 50 + RADIUS_PCT * Math.cos(angle);
           const top = 50 + RADIUS_PCT * Math.sin(angle);
           const Icon = node.icon;
+          const isActive = activeId === node.id;
           return (
             <button
               key={node.id}
-              onClick={() => zoomNavigate(node.href, "in")}
+              onClick={() => {
+                setActiveId(node.id);
+                window.setTimeout(() => zoomNavigate(node.href, "in"), 260);
+              }}
               className="absolute z-10 flex flex-col items-center gap-1 focus:outline-none"
               style={{ left: `${left}%`, top: `${top}%`, transform: "translate(-50%,-50%)" }}
               aria-label={`Open ${node.label}`}
             >
-              <span className="grid h-11 w-11 place-items-center rounded-full border border-border-strong bg-surface-2 text-muted transition-all duration-200 hover:border-primary hover:text-fg active:scale-95">
+              <span
+                className={`grid h-11 w-11 place-items-center rounded-full border transition-all duration-200 ${
+                  isActive
+                    ? "scale-110 border-primary bg-primary text-on-primary shadow-[0_0_22px_var(--color-primary)]"
+                    : "border-border-strong bg-surface-2 text-muted hover:border-primary hover:text-fg"
+                }`}
+              >
                 <Icon size={18} />
               </span>
-              <span className="text-[11px] font-medium text-muted">
+              <span
+                className={`text-[11px] font-medium transition-colors ${
+                  isActive ? "text-primary" : "text-muted"
+                }`}
+              >
                 {node.label}
               </span>
             </button>
