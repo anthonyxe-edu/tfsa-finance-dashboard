@@ -21,15 +21,18 @@ export function useZoomNavigate() {
       return;
     }
 
+    // Dive INTO the orb: the current page accelerates up and fades from the orb's
+    // center. We push while it's nearly transparent so the destination's
+    // emerge-from-within entrance overlaps (no fade-to-black gap).
     el.style.animation = "none";
-    el.style.transformOrigin = "center 40%";
+    el.style.transformOrigin = "center 38%";
     el.style.willChange = "transform, opacity";
     el.style.transition =
-      "transform 300ms cubic-bezier(0.6, 0, 0.9, 0.2), opacity 280ms ease-in";
+      "transform 320ms cubic-bezier(0.66, 0, 0.84, 0), opacity 250ms ease-in";
     requestAnimationFrame(() => {
-      el.style.transform = mode === "in" ? "scale(3)" : "scale(0.2)";
+      el.style.transform = mode === "in" ? "scale(2.8)" : "scale(0.22)";
       el.style.opacity = "0";
     });
-    window.setTimeout(() => router.push(href), 285);
+    window.setTimeout(() => router.push(href), 230);
   };
 }

@@ -134,11 +134,15 @@
   }
 }
 
-/* Cohesive zoom-in on every navigation (re-mounted by app/template.tsx). */
+/* Every navigation: the destination emerges from WITHIN the orb — it zooms up
+   from a small point at the orb's center (origin 38%) rather than fading in. */
 @keyframes page-zoom-in {
   from {
     opacity: 0;
-    transform: scale(0.94);
+    transform: scale(0.32);
+  }
+  45% {
+    opacity: 1;
   }
   to {
     opacity: 1;
@@ -146,8 +150,9 @@
   }
 }
 .page-zoom {
-  animation: page-zoom-in 340ms cubic-bezier(0.22, 1, 0.36, 1);
+  animation: page-zoom-in 460ms cubic-bezier(0.16, 1, 0.3, 1);
   transform-origin: center 38%;
+  will-change: transform, opacity;
 }
 
 /* Boot/load-in splash: matter converges + fuses into the orb, then zooms in. */
