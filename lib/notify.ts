@@ -52,6 +52,23 @@ export function buildNotifications(args: {
         ts: now,
         read: false,
       });
+    } else if (pct >= 75) {
+      // NOMI-style progressive milestones so the app speaks before trouble.
+      out.push({
+        id: `budget-75-${month}`,
+        type: "spending",
+        message: `Three quarters in — ${pct}% of this month's income used. ${money(safeToSpendToday(income, spend))}/day keeps the rest smooth.`,
+        ts: now,
+        read: false,
+      });
+    } else if (pct >= 50) {
+      out.push({
+        id: `budget-50-${month}`,
+        type: "spending",
+        message: `Halfway point: ${pct}% of income used. On pace — ${money(safeToSpendToday(income, spend))}/day to spend from here.`,
+        ts: now,
+        read: false,
+      });
     }
   }
 

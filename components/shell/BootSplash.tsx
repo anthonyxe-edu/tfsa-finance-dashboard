@@ -59,7 +59,7 @@ export function BootSplash() {
     });
 
     const lime = "157,255,60";
-    const DUR = 1350;
+    const DUR = 1100;
     const start = performance.now();
     const ease = (x: number) => 1 - Math.pow(1 - x, 3);
     let raf = 0;
@@ -126,11 +126,11 @@ export function BootSplash() {
     };
     raf = requestAnimationFrame(frame);
 
-    const t1 = setTimeout(() => setPhase("out"), 1650);
+    const t1 = setTimeout(() => setPhase("out"), 1300);
     const t2 = setTimeout(() => {
       sessionStorage.setItem("booted", "1");
       setPhase("done");
-    }, 2250);
+    }, 1900);
 
     return () => {
       cancelAnimationFrame(raf);

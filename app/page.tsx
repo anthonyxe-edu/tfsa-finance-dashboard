@@ -42,7 +42,10 @@ export default function HomePage() {
       </div>
 
       {/* Key stats */}
-      <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+      <div
+        className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4"
+        style={{ animation: "panel-in 360ms ease 80ms both" }}
+      >
         <StatTile
           label="Monthly income"
           value={<span className="tnum">{fmtCurrency0(income.income)}</span>}
@@ -72,10 +75,13 @@ export default function HomePage() {
       </div>
 
       {/* Notification cards */}
-      <NotificationCards />
+      <div style={{ animation: "panel-in 360ms ease 160ms both" }}>
+        <NotificationCards />
+      </div>
 
       {/* Living-below-means advice */}
-      <Card
+      <div style={{ animation: "panel-in 360ms ease 240ms both" }}>
+        <Card
         title="What to watch this month"
         subtitle="Living-below-means insights"
         action={
@@ -86,9 +92,10 @@ export default function HomePage() {
             Details <ArrowRight size={13} />
           </Link>
         }
-      >
-        <AdviceList limit={4} />
-      </Card>
+        >
+          <AdviceList limit={4} />
+        </Card>
+      </div>
     </div>
   );
 }

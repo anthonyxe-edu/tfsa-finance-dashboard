@@ -1,5 +1,15 @@
 "use client";
-import { GenerativeArtScene } from "@/components/ui/anomalous-matter-hero";
+import dynamic from "next/dynamic";
+
+// Code-split three.js (~600KB) out of the initial bundle: the page paints
+// immediately and the orb streams in a beat later (masked by the boot splash).
+const GenerativeArtScene = dynamic(
+  () =>
+    import("@/components/ui/anomalous-matter-hero").then(
+      (m) => m.GenerativeArtScene,
+    ),
+  { ssr: false },
+);
 
 // Tone hexes mirror the design tokens. Lime = frugal, amber = watch, red = over.
 const TONES = {

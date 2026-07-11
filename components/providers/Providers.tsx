@@ -1,5 +1,6 @@
 "use client";
 import type { ReactNode } from "react";
+import { preconnect } from "react-dom";
 import { Loader2 } from "lucide-react";
 import { AuthProvider, useAuth } from "@/components/auth/AuthProvider";
 import { Login } from "@/components/auth/Login";
@@ -28,6 +29,11 @@ function Gate({ children }: { children: ReactNode }) {
 }
 
 export function Providers({ children }: { children: ReactNode }) {
+  // Open the TLS connection to Supabase before the first data fetch needs it.
+  preconnect(
+    process.env.NEXT_PUBLIC_SUPABASE_URL ??
+      "https://sxtczkakmdmcakvlijng.supabase.co",
+  );
   return (
     <AuthProvider>
       <Gate>{children}</Gate>
